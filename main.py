@@ -19,7 +19,22 @@ class Calculator:
         self.mainMem = GlobalMemory(self.memPath)
         self.mainMem.trie = self.trie = Trie.fromCollection(self.mainMem.fullDict())
         self.ui = UI(self.mainMem, self.historyPath)
+        self.main_loop = True
         sys.setrecursionlimit(500000)
+
+        self.modules = {
+            re.compile(r'^\s*help\s*$'): self.module_help,
+            re.compile(r'^\s*vars\s*$'): self.module_vars,
+            re.compile(r'^\s*del\s(.*)$'): self.module_delete,
+            re.compile(r'^\s*(?:quit|exit)\s*$'): self.module_quit,
+            re.compile(r'^\s*frac(?:\s+(\d+))?$'): self.module_frac,
+            re.compile(r'^\s*prec(?:ision)?(?:\s+(\d+))?$'): self.module_prec,
+            re.compile(r'^\s*disp(?:lay)?(?:\s+(\d+))?$'): self.module_display,
+            re.compile(r'^\s*debug(?:\s+(\w+))?$'): self.module_debug,
+            re.compile(r'^\s*(?:kb|keyboard)(?:\s+(\w+))?$'): self.module_keyboard,
+            re.compile(r'^\s*(?:quick_exp(?:onents)?)(?:\s+(\w+))?$'): self.module_quick_exp,
+            re.compile(r'^\s*(?:=|sto(?:re)? |->)\s*([A-Za-z]\w*)\s*$'): self.module_display
+        }
     
     def HandleErrors(function):
         def wrapper(*args, **kwargs):
@@ -68,23 +83,26 @@ class Calculator:
                 if i > 0: self.ui.addText("display", (', ', ), startNewLine=False)
                 self.ui.addText("display", (var, UI.LIGHTBLUE_ON_BLACK), startNewLine=False)
     
+    def module_quit(self):
+        self.main_loop = False
+    
     def module_frac(self):
-        if m.group(1) is not None: 
-            st.set("frac_max_length", int(m.group(1)))
+        if self.m.group(1) is not None: 
+            st.set("frac_max_length", int(self.m.group(1)))
         self.ui.addText("display", ("frac_max_length", UI.LIGHTBLUE_ON_BLACK), (' -> ', ), (f"{st.get('frac_max_length')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_prec(self):
-        if m.group(1) is not None: 
-            st.set("working_precision", int(m.group(1)))
+        if self.m.group(1) is not None: 
+            st.set("working_precision", int(self.m.group(1)))
         self.ui.addText("display", ("working_precision", UI.LIGHTBLUE_ON_BLACK), (' -> ', ), (f"{st.get('working_precision')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_display(self):
-        if m.group(1) is not None: 
-            st.set("final_precision", int(m.group(1)))
+        if self.m.group(1) is not None: 
+            st.set("final_precision", int(self.m.group(1)))
         self.ui.addText("display", ("final_precision", UI.LIGHTBLUE_ON_BLACK), (' -> ', ), (f"{st.get('final_precision')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_debug(self):
-        flag = {'on':True, 'off':False}.get(m.group(1) if m.group(1) is None else m.group(1).lower(), None)
+        flag = {'on':True, 'off':False}.get(self.m.group(1) if self.m.group(1) is None else self.m.group(1).lower(), None)
         if flag is not None: 
             st.set("debug", flag)
         else: 
@@ -92,7 +110,7 @@ class Calculator:
         self.ui.addText("display", ("debug", UI.LIGHTBLUE_ON_BLACK), (" -> ", ), (f"{st.get('debug')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_keyboard(self):
-        flag = {'on':True, 'off':False}.get(m.group(1) if m.group(1) is None else m.group(1).lower(), None)
+        flag = {'on':True, 'off':False}.get(self.m.group(1) if self.m.group(1) is None else self.m.group(1).lower(), None)
         if flag is not None:
             st.set("keyboard", flag)
         else:
@@ -100,69 +118,42 @@ class Calculator:
         self.ui.addText("display", ("keyboard", UI.LIGHTBLUE_ON_BLACK), (" -> ", ), (f"{st.get('keyboard')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_quick_exp(self):
-        flag = {'on':True, 'off':False}.get(m.group(1) if m.group(1) is None else m.group(1).lower(), None)
+        flag = {'on':True, 'off':False}.get(self.m.group(1) if self.m.group(1) is None else self.m.group(1).lower(), None)
         if flag is not None: 
             st.set("quick_exponents", flag)
         else: 
             self.ui.addText("display", ("Usage: ", ), ("quick_exp[onents] [on/off]", UI.LIGHTBLUE_ON_BLACK))
         self.ui.addText("display", ("quick_exponents", UI.LIGHTBLUE_ON_BLACK), (" -> ", ), (f"{st.get('quick_exponents')}", UI.LIGHTBLUE_ON_BLACK))
     
-    def module_sto(self):
+    def module_display(self):
         if (ans := self.mainMem.get('ans')) is None:
             self.ui.addText("display", ("Variable '", ), ("ans", UI.LIGHTBLUE_ON_BLACK), ("' does not exist or has been deleted", ))
         else:
-            mainMem.add(m.group(1), ans)
-            self.ui.trie.insert(m.group(1))
-            self.ui.addText("display", (f'{m.group(1)}', UI.LIGHTBLUE_ON_BLACK), (' = ', ), (f'{self.mainMem.get(m.group(1)).value()}', UI.LIGHTBLUE_ON_BLACK))
+            self.mainMem.add(self.m.group(1), ans)
+            self.ui.trie.insert(self.m.group(1))
+            self.ui.addText("display", (f'{self.m.group(1)}', UI.LIGHTBLUE_ON_BLACK), (' = ', ), (f'{self.mainMem.get(self.m.group(1)).value()}', UI.LIGHTBLUE_ON_BLACK))
 
     @HandleErrors
     def main(self):
-        while True:
+        while self.main_loop:
             inp = self.ui.getInput(trie=self.trie)
 
             # check for commands
-            if m := re.match(r'^\s*help\s*$', inp):
-                self.module_help()
+            command = False
+            for pattern, func in self.modules.items():
+                self.m = re.match(pattern, inp)
+                if self.m:
+                    func()
+                    command = True
 
-            elif m := re.match(r'^\s*vars\s*$', inp):
-                self.module_vars()
-
-            elif m := re.match(r'^\s*del\s(.*)$', inp):
-                self.module_delete()
-
-            elif m := re.match(r'^\s*(?:quit|exit)\s*$', inp):
-                break
-
-            elif m := re.match(r'^\s*frac(?:\s+(\d+))?$', inp):
-                self.module_frac()
-
-            elif m := re.match(r'^\s*prec(?:ision)?(?:\s+(\d+))?$', inp):
-                self.module_prec()
-
-            elif m := re.match(r'^\s*disp(?:lay)?(?:\s+(\d+))?$', inp):
-                self.module_display()
-
-            elif m := re.match(r'^\s*debug(?:\s+(\w+))?$', inp):
-                self.module_debug()
-
-            elif m := re.match(r'^\s*(?:kb|keyboard)(?:\s+(\w+))?$', inp):
-                self.module_keyboard()
-
-            elif m := re.match(r'^\s*(?:quick_exp(?:onents)?)(?:\s+(\w+))?$', inp):
-                self.module_quick_exp()
-
-            elif inp.strip() == '':
-                continue
-
-            elif m := re.match(r'^\s*(?:=|sto(?:re)? |->)\s*([A-Za-z]\w*)\s*$', inp):
-                self.module_sto()
-
-            else:
+            if not command:
                 expr = parse(inp)
-                if expr is None: continue
+                if expr is None: 
+                    continue
                 self.mainMem.writeLock = True
                 val = expr.value(self.mainMem)
-                if isinstance(val, Number): val = val.fastContinuedFraction(epsilon=st.finalEpsilon)
+                if isinstance(val, Number): 
+                    val = val.fastContinuedFraction(epsilon=st.finalEpsilon)
                 self.ui.addText("display", (val.disp(st.get('frac_max_length'), st.get('final_precision')), UI.BRIGHT_GREEN_ON_BLACK))
                 self.mainMem.writeLock = False
                 self.mainMem.add('ans', val)
