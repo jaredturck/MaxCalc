@@ -36,7 +36,7 @@ class Tuple(Expression):  # Tuple elements are all Expressions
         return expr
 
     def disp(self, fracMaxLength, decimalPlaces):
-        tempTokens = [token.fastContinuedFraction(epsilon=st.finalEpsilon) if hasattr(token, 'fastContinuedFraction') else token for token in self.tokens]
+        tempTokens = [token.fast_continued_fraction(epsilon=st.finalEpsilon) if hasattr(token, 'fast_continued_fraction') else token for token in self.tokens]
         return self.brackets[:1] + ', '.join(['-' if x is None else x.disp(fracMaxLength, decimalPlaces) for x in tempTokens]) + self.brackets[1:]
 
     def __len__(self): return len(self.tokens)

@@ -154,7 +154,7 @@ class Calculator:
                 self.mainMem.writeLock = True
                 val = expr.value(self.mainMem)
                 if isinstance(val, Number): 
-                    val = val.fastContinuedFraction(epsilon=self.st.finalEpsilon)
+                    val = val.fast_continued_fraction(epsilon=self.st.finalEpsilon)
                 self.ui.addText("display", (val.disp(self.st.get('frac_max_length'), self.st.get('final_precision')), UI.BRIGHT_GREEN_ON_BLACK))
                 self.mainMem.writeLock = False
                 self.mainMem.add('ans', val)

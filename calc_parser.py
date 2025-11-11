@@ -60,7 +60,7 @@ def parse(s, offset=0, brackets='', parent=None):
 
         elif m := re.match(r'(\d+(?:\.\d+)?|\.\d+)(?:[Ee](-?\d+))?', ss):   # Number. Cannot follow Number, spaceSeparator, or Var
             if (exponent := m.groups()[1]) is not None:
-                addToken(RealNumber.fromScientificNotation(m.groups()[0], m.groups()[1]), m)
+                addToken(RealNumber.from_scientific_notation(m.groups()[0], m.groups()[1]), m)
             else:
                 addToken(RealNumber(m.groups()[0], fcf=True, epsilon=st.epsilon), m)
         elif checkOpRegex():

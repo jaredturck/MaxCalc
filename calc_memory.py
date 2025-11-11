@@ -59,7 +59,7 @@ class Memory:
             if str in dct: return dct[str]
 
     def add(self, str, val):
-        if isinstance(val, Number): val = val.fastContinuedFraction(epsilon=st.epsilon)
+        if isinstance(val, Number): val = val.fast_continued_fraction(epsilon=st.epsilon)
         self.vars[str] = val
 
     def delete(self, key):  # Functions should never have stuff in their memory deleted
@@ -104,7 +104,7 @@ class GlobalMemory(Memory):
             # if 'ans' in self.vars: self.vars.pop('ans')
             self.vars['ans'] = val
         else:
-            if isinstance(val, Number): val = val.fastContinuedFraction(epsilon=st.epsilon)
+            if isinstance(val, Number): val = val.fast_continued_fraction(epsilon=st.epsilon)
             needSort = string not in self.vars
             self.vars[string] = val
             if self.trie is not None: self.trie.insert(string)

@@ -1,6 +1,9 @@
+''' Colors '''
+
 import curses
 
 def main(stdscr):
+    ''' Initialize colors and display color pairs '''
     curses.start_color()
     curses.use_default_colors()
     for i in range(1, curses.COLOR_PAIRS):

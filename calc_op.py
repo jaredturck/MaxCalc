@@ -9,7 +9,7 @@ st = Settings()
 
 def factorialFn(n):
     if not isinstance(n, RealNumber): raise EvaluationError("Invalid argument to factorial operator")
-    if not n.isInt(): raise CalculatorError(f'Factorial operator expects an integer, not {str(n)}')
+    if not n.is_int(): raise CalculatorError(f'Factorial operator expects an integer, not {str(n)}')
     n = int(n)
     if n in (0, 1): return one
     for i in range(2, n): n *= i
@@ -20,7 +20,7 @@ def permutationFn(n, r):  # nPr
 
 def combinationFn(n, r, perm=False):  # nCr
     if not isinstance(n, RealNumber) or not isinstance(r, RealNumber): raise EvaluationError("Invalid argument to combination operator")
-    if not n.isInt() or not r.isInt(): raise EvaluationError(f'Combination function expects integers')
+    if not n.is_int() or not r.is_int(): raise EvaluationError(f'Combination function expects integers')
     n, r = int(n), int(r)
     res = 1
     if n in (0, 1): return one
@@ -32,17 +32,17 @@ def exponentiationFn(a, b):
     if isinstance(a, Tuple) or isinstance(b, Tuple):
         raise EvaluationError("Cannot perform exponentiation with tuples/vectors")
     if isinstance(a, Function):
-        if b.isInt(): return a ** b
+        if b.is_int(): return a ** b
         raise CalculatorError(f'Cannot raise a function ({str(a)}) to a fractional power {str(b)}')
     if a == zero:
         if b == zero: raise CalculatorError(f'0^0 is undefined')
         return zero
-    if b.isInt() and (isinstance(a, RealNumber) or isinstance(a, ComplexNumber) and a.real.isInt() and a.im.isInt()):
+    if b.is_int() and (isinstance(a, RealNumber) or isinstance(a, ComplexNumber) and a.real.is_int() and a.im.is_int()):
         return intPower(a, int(b))
     elif isinstance(a, ComplexNumber) and isinstance(b, RealNumber):  # complex ^ real
         r = exponentiationFn(abs(a), b)
-        theta = (a.arg() / pi).fastContinuedFraction() * b % two * pi
-        return ComplexNumber(r * cosFn(theta), r * sinFn(theta)).fastContinuedFraction()
+        theta = (a.arg() / pi).fast_continued_fraction() * b % two * pi
+        return ComplexNumber(r * cosFn(theta), r * sinFn(theta)).fast_continued_fraction()
     # if isinstance(b, RealNumber) and b.sign == -1: return one / exponentiationFn(a, -b, *args, fcf=fcf, **kwargs)
     # a^b = e^(b ln a)
     return exp(b * lnFn(a))
@@ -53,9 +53,9 @@ def intPower(base, power):
     result = one
     while pow > 0:
         if pow & 1: result *= base
-        base = (base * base).fastContinuedFraction()
+        base = (base * base).fast_continued_fraction()
         pow >>= 1
-    return (one / result if power < 0 else result).fastContinuedFraction()
+    return (one / result if power < 0 else result).fast_continued_fraction()
 
 def exp(x):
     if isinstance(x, ComplexNumber):  # e^(a + ib) = (e^a) e^(ib) = (e^a) cis b
@@ -68,7 +68,7 @@ def exp(x):
         term = (term * x) / i
         sum += term
         i += one
-    return intPart * sum.fastContinuedFraction()
+    return intPart * sum.fast_continued_fraction()
 
 def lnFn(x):
     if not isinstance(x, Number): raise EvaluationError("Invalid argument to ln function")
@@ -97,7 +97,7 @@ def lnFn(x):
         xPow *= x
         denom += one
         dx = xPow / denom 
-    return result.fastContinuedFraction()
+    return result.fast_continued_fraction()
 
 def sinFn(x):
     if isinstance(x, ComplexNumber):
@@ -117,9 +117,9 @@ def sinFn(x):
         mul += two
         fac *= mul * (mul - one)
         xPow *= xSq
-        dx = (xPow / fac).fastContinuedFraction()
+        dx = (xPow / fac).fast_continued_fraction()
         sum += dx
-    return sum.fastContinuedFraction()
+    return sum.fast_continued_fraction()
 
 def cosFn(x):
     return sinFn(pi / two - x)
@@ -157,9 +157,9 @@ def arcsinFn(x):
     while abs(term) > st.epsilon:
         k += one
         term *= xsqr * (k * two) * (k * two - one) / four / k / k
-        term = term.fastContinuedFraction()
+        term = term.fast_continued_fraction()
         sum += term / (k * two + one)
-    return sum.fastContinuedFraction()
+    return sum.fast_continued_fraction()
 
 def arccosFn(x):
     if not isinstance(x, RealNumber): raise EvaluationError("Invalid argument to arccos function")
@@ -179,9 +179,9 @@ def arctanFn(x):
         term *= factor
         term *= num
         term /= num + one
-        term = term.fastContinuedFraction()
+        term = term.fast_continued_fraction()
         sum += term
-        sum = sum.fastContinuedFraction()
+        sum = sum.fast_continued_fraction()
         num += two
     return sum
 
@@ -215,7 +215,7 @@ def assignmentFn(L, R, mem=None):
 def indexFn(tup, idx):
     from calc_tuples import Tuple
     if not isinstance(tup, Tuple): raise EvaluationError("Index operator expects a tuple")
-    if not isinstance(idx, RealNumber) or not idx.isInt(): raise EvaluationError("Index must be an integer")
+    if not isinstance(idx, RealNumber) or not idx.is_int(): raise EvaluationError("Index must be an integer")
     idx = int(idx)
     if idx < 0 or idx >= len(tup): raise EvaluationError(f"index {idx} is out of bounds for this tuple")
     return tup.tokens[idx]
@@ -237,7 +237,7 @@ def knifeFn(dir):
     def check(L, R):  # ensures that L is the index and R is the tuple.
         from calc_tuples import Tuple
         if not isinstance(L, RealNumber) or not isinstance(R, Tuple): return False
-        if not L.isInt(): raise EvaluationError("Knife operator expects an integer operand")
+        if not L.is_int(): raise EvaluationError("Knife operator expects an integer operand")
         L = int(L)
         if L < 0 or L > len(R): raise EvaluationError(f"Unable to slice {L} element(s) from this tuple")
         return True
@@ -258,7 +258,7 @@ def knifeFn(dir):
 def comparator(x, y):
     from calc_tuples import Tuple
     match x, y:
-        case Number(), Number(): return (x - y).fastContinuedFraction(epsilon=st.finalEpsilon)
+        case Number(), Number(): return (x - y).fast_continued_fraction(epsilon=st.finalEpsilon)
         case Tuple(), Tuple():
             for i, j in zip(x, y):
                 c = comparator(i, j)
@@ -377,8 +377,8 @@ gtAccurate = Infix(' >* ', lambda x, y: one if x > y else zero)
 gtEqAccurate = Infix(' >== ', lambda x, y: one if x >= y else zero)
 eqAccurate = Infix(' === ', lambda x, y: one if x == y else zero)
 neqAccurate = Infix(' !== ', lambda x, y: one if x != y else zero)
-logicalAND = Infix(' && ', lambda x, y: x if x.fastContinuedFraction(epsilon=st.finalEpsilon) == zero else y)
-logicalOR = Infix(' || ', lambda x, y: x if x.fastContinuedFraction(epsilon=st.finalEpsilon) != zero else y)
+logicalAND = Infix(' && ', lambda x, y: x if x.fast_continued_fraction(epsilon=st.finalEpsilon) == zero else y)
+logicalOR = Infix(' || ', lambda x, y: x if x.fast_continued_fraction(epsilon=st.finalEpsilon) != zero else y)
 functionInvocation = Infix('<invoke>', lambda x, y, mem=None: x.invoke(y))
 functionComposition = Infix('', lambda x, y: x.invoke(y))
 sin = Prefix('sin', sinFn)
