@@ -19,12 +19,13 @@ class Settings:
         self._version = 0
 
     def set(self, key, value):
+        from calc_number import RealNumber
         # if key not in self._settings: raise SettingsError(f"key '{key}' not found in settings")
         self._settings[key] = value
         if key == 'working_precision':
-            self.epsilon = calc_number.RealNumber(1, 10 ** value, fcf=False)
+            self.epsilon = RealNumber(1, 10 ** value, fcf=False)
         elif key == 'final_precision':
-            self.finalEpsilon = calc_number.RealNumber(1, 10 * 10 ** value, fcf=False)
+            self.finalEpsilon = RealNumber(1, 10 * 10 ** value, fcf=False)
         elif key == 'keyboard':
             from calc_ui import UI
             UI().setupKeyboard()

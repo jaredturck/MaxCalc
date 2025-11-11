@@ -2,7 +2,7 @@ from calc_operators import Operator, Prefix, Postfix, Infix, Ternary, PrefixFunc
 from calc_functions import Function
 from calc_errors import CalculatorError, EvaluationError
 from calc_vars import LValue
-from calc_number import RealNumber, ComplexNumber, Number, zero, one, two, three, four, half, ten, ln2, ln10, ln1_1, sqrt2, sqrt_2pi, pi, imag_i
+from calc_number import RealNumber, ComplexNumber, Number, zero, one, two, three, four, half, ten, ln2, ln10, ln1_1, sqrt2, sqrt_2pi, pi, imag_i, onePointOne, e
 from calc_settings import Settings
 
 st = Settings()

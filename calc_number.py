@@ -1,5 +1,5 @@
 from calc_settings import Settings
-from calc_errors import NumberError, CalculatorError
+from calc_errors import NumberError, CalculatorError, EvaluationError
 from calc_vars import Value
 from re import match
 from math import gcd

@@ -52,9 +52,9 @@ class Lexer:
         if m := re.match(r'(\d+(?:\.\d*)?|\.\d+)', self.current_string):  # Number. Cannot follow Number, space_separator, or Var
             return add_token(RealNumber(m.group()), m)
             
-        for regex in Op.regex:
+        for regex in op.regex:
             if m := re.match(regex, self.current_string): 
-                return add_token(Op.regex[regex], m)
+                return add_token(op.regex[regex], m)
         if m := re.match(r'([A-Za-z](?:\w*(?:\d(?!(?:[0-9.]))|[A-Za-z_](?![A-Za-z])))?)', self.current_string):  # Word token (might be a concatenation of vars & possible func at the end)
             return add_token(WordToken(m.group()), m)
         raise ParseError(f"Error parsing string: '{self.current_string}'")
@@ -107,7 +107,7 @@ def parse(s, start_pos=0, brackets='', mem=None, debug=False):
             add_token(RealNumber(m.group()), m)
         else:  # symbolic operator
             found_token = False
-            for regex in (dict := Op.regex):
+            for regex in (dict := op.regex):
                 if m := re.match(regex, s):
                     this_token = dict[regex]
                     # add the token
@@ -128,7 +128,7 @@ def parse(s, start_pos=0, brackets='', mem=None, debug=False):
     expr.tokens, expr.tokenPos = validate(tokens, pos_list, brackets=brackets)
 
     match tokens[:3]:
-        case [WordToken(), Expression(), Op.assignment]:  # function to be assigned
+        case [WordToken(), Expression(), op.assignment]:  # function to be assigned
             pass
     
     return expr
@@ -142,22 +142,22 @@ def validate(tokens, pos_list, brackets=''):
         # Transform / remove some types of tokens
         match lst[i-1:i+2]:
             # Remove space separators that come at the start or end
-            case [_any_, Op.space_separator, None] | [None, Op.space_separator, _any_]:
+            case [_any_, op.space_separator, None] | [None, op.space_separator, _any_]:
                 lst[i:i+1] = []; pos_lst[i:i+1] = []; i -= 2
             # Bin cannot follow Bin / UL / None
             case [Infix() | Prefix() | None, Infix(), _any_]: raise ParseError(f"Invalid operand for {str(lst[i])} (pos {pos_lst[i]})")
             # Bin cannot precede Bin / UR / None
             case [_any_, Infix(), Infix() | Postfix() | None]: raise ParseError(f"Invalid operand for {str(lst[i])} (pos {pos_lst[i]})")
             # L to R: Convert +/- to positive/negative if they come after Bin / UL
-            case [None | Infix() | Prefix(), Op.ambiguous_plus | Op.ambiguous_minus, _any_]:
-                lst[i] = Op.positive if lst[i] == Op.ambiguous_plus else Op.negative
+            case [None | Infix() | Prefix(), op.ambiguous_plus | op.ambiguous_minus, _any_]:
+                lst[i] = op.positive if lst[i] == op.ambiguous_plus else op.negative
                 i -= 2
             # L to R: If not, convert +/- to addition/subtraction
-            case [_other_types_, Op.ambiguous_plus | Op.ambiguous_minus, _also_other_types_]:
-                lst[i] = Op.addition if lst[i] == Op.ambiguous_plus else Op.subtraction
+            case [_other_types_, op.ambiguous_plus | op.ambiguous_minus, _also_other_types_]:
+                lst[i] = op.addition if lst[i] == op.ambiguous_plus else op.subtraction
                 i -= 2
             # Numbers cannot follow space separators or evaluables
-            case [_any_, Value() | Op.space_separator, RealNumber()]: raise ParseError(f'Number {str(lst[i+1])} cannot follow space separator or an evaluable expression (pos {pos_lst[i+1]})')
+            case [_any_, Value() | op.space_separator, RealNumber()]: raise ParseError(f'Number {str(lst[i+1])} cannot follow space separator or an evaluable expression (pos {pos_lst[i+1]})')
             # UR has to follow an evaluable
             case [_operand_, Postfix(), _any_] if not isinstance(_operand_, (Value, WordToken)): raise ParseError(f"Invalid operand for {str(lst[i])} (pos {pos_lst[i]})")
             # UL cannot precede Bin or UR

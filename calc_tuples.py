@@ -65,7 +65,7 @@ class Tuple(Expression):  # Tuple elements are all Expressions
             return len(e1) == len(e2)
 
     def __add__(self, other):
-        from number import Number
+        from calc_number import Number
         if isinstance(other, Number): raise EvaluationError('Cannot add tuple/vector with non-tuple/vector')
         if not isinstance(other, Tuple): return NotImplemented
         if len(self) != len(other): raise EvaluationError("Cannot add tuples of different lengths. Did you mean to concatenate '<+>'?")
@@ -86,7 +86,7 @@ class Tuple(Expression):  # Tuple elements are all Expressions
     def __rsub__(self, other): return self + (-other)
 
     def __mul__(self, other):
-        from number import Number
+        from calc_number import Number
         if isinstance(other, Tuple): raise EvaluationError("Cannot scalar multiply tuple/vector with non-Number. Did you mean dot product '.' or cross product '><' instead?")
         if not isinstance(other, Number): return NotImplemented
         tup = self.morphCopy()
@@ -96,7 +96,7 @@ class Tuple(Expression):  # Tuple elements are all Expressions
     def __rmul__(self, other): return self * other
 
     def __truediv__(self, other):
-        from number import Number, one
+        from calc_number import Number, one
         if isinstance(other, Tuple): raise EvaluationError("Cannot scalar multiply tuple/vector with non-Number. Did you mean dot product '.' or cross product '><' instead?")
         if not isinstance(other, Number): return NotImplemented
         return self * (one / other)
