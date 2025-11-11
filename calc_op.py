@@ -1,3 +1,5 @@
+''' Module op '''
+
 from calc_operators import Operator, Prefix, Postfix, Infix, Ternary, PrefixFunction
 from calc_functions import Function
 from calc_errors import CalculatorError, EvaluationError
@@ -7,76 +9,101 @@ from calc_settings import Settings
 
 st = Settings()
 
-def factorialFn(n):
-    if not isinstance(n, RealNumber): raise EvaluationError("Invalid argument to factorial operator")
-    if not n.is_int(): raise CalculatorError(f'Factorial operator expects an integer, not {str(n)}')
+def factorial_fn(n):
+    ''' factorial function n!'''
+    if not isinstance(n, RealNumber):
+        raise EvaluationError("Invalid argument to factorial operator")
+    if not n.is_int():
+        raise CalculatorError(f'Factorial operator expects an integer, not {str(n)}')
     n = int(n)
-    if n in (0, 1): return one
-    for i in range(2, n): n *= i
+    if n in (0, 1):
+        return one
+    for i in range(2, n):
+        n *= i
     return RealNumber(n)
 
-def permutationFn(n, r):  # nPr
-    return combinationFn(n, r, perm=True)
+def permutation_fn(n, r):  # nPr
+    ''' permutation function '''
+    return combination_fn(n, r, perm=True)
 
-def combinationFn(n, r, perm=False):  # nCr
-    if not isinstance(n, RealNumber) or not isinstance(r, RealNumber): raise EvaluationError("Invalid argument to combination operator")
-    if not n.is_int() or not r.is_int(): raise EvaluationError(f'Combination function expects integers')
+def combination_fn(n, r, perm=False):  # nCr
+    ''' combination function '''
+    if not isinstance(n, RealNumber) or not isinstance(r, RealNumber):
+        raise EvaluationError("Invalid argument to combination operator")
+    if not n.is_int() or not r.is_int():
+        raise EvaluationError('Combination function expects integers')
     n, r = int(n), int(r)
     res = 1
-    if n in (0, 1): return one
-    for i in range(1, r + 1): res *= n + 1 - i; res //= i ** (not perm)
+    if n in (0, 1):
+        return one
+    for i in range(1, r + 1):
+        res *= n + 1 - i
+        res //= i ** (not perm)
     return RealNumber(res)
 
-def exponentiationFn(a, b):
+def exponentiation_fn(a, b):
+    ''' exponentiation function a^b '''
     from calc_tuples import Tuple
     if isinstance(a, Tuple) or isinstance(b, Tuple):
         raise EvaluationError("Cannot perform exponentiation with tuples/vectors")
     if isinstance(a, Function):
-        if b.is_int(): return a ** b
+        if b.is_int():
+            return a ** b
         raise CalculatorError(f'Cannot raise a function ({str(a)}) to a fractional power {str(b)}')
     if a == zero:
-        if b == zero: raise CalculatorError(f'0^0 is undefined')
+        if b == zero:
+            raise CalculatorError('0^0 is undefined')
         return zero
     if b.is_int() and (isinstance(a, RealNumber) or isinstance(a, ComplexNumber) and a.real.is_int() and a.im.is_int()):
-        return intPower(a, int(b))
+        return int_power(a, int(b))
     elif isinstance(a, ComplexNumber) and isinstance(b, RealNumber):  # complex ^ real
-        r = exponentiationFn(abs(a), b)
+        r = exponentiation_fn(abs(a), b)
         theta = (a.arg() / pi).fast_continued_fraction() * b % two * pi
-        return ComplexNumber(r * cosFn(theta), r * sinFn(theta)).fast_continued_fraction()
-    # if isinstance(b, RealNumber) and b.sign == -1: return one / exponentiationFn(a, -b, *args, fcf=fcf, **kwargs)
+        return ComplexNumber(r * cos_fn(theta), r * sin_fn(theta)).fast_continued_fraction()
+    # if isinstance(b, RealNumber) and b.sign == -1: return one / exponentiation_fn(a, -b, *args, fcf=fcf, **kwargs)
     # a^b = e^(b ln a)
     return exp(b * lnFn(a))
 
-def intPower(base, power):
-    if not isinstance(power, int): raise CalculatorError(f'intPower() expects integral power, received {power}')
-    pow = abs(power)
+def int_power(base, power):
+    ''' integer exponentiation function base^power '''
+    if not isinstance(power, int):
+        raise CalculatorError(f'int_power() expects integral power, received {power}')
+    power = abs(power)
     result = one
-    while pow > 0:
-        if pow & 1: result *= base
+    while power > 0:
+        if power & 1:
+            result *= base
         base = (base * base).fast_continued_fraction()
-        pow >>= 1
+        power >>= 1
     return (one / result if power < 0 else result).fast_continued_fraction()
 
 def exp(x):
+    ''' exponential function e^x '''
     if isinstance(x, ComplexNumber):  # e^(a + ib) = (e^a) e^(ib) = (e^a) cis b
         r = exp(x.real)
-        return ComplexNumber(r * cosFn(x.im), r * sinFn(x.im))
-    intPart = intPower(e, int(x))
+        return ComplexNumber(r * cos_fn(x.im), r * sin_fn(x.im))
+    intPart = int_power(e, int(x))
     x = x.frac_part()
-    sum = term = i = one
-    while (abs(term) >= st.epsilon):
+    total = term = i = one
+    while abs(term) >= st.epsilon:
         term = (term * x) / i
-        sum += term
+        total += term
         i += one
-    return intPart * sum.fast_continued_fraction()
+    return intPart * total.fast_continued_fraction()
 
 def lnFn(x):
-    if not isinstance(x, Number): raise EvaluationError("Invalid argument to ln function")
-    if x == zero: raise CalculatorError(f'ln 0 is undefined.')
+    ''' natural logarithm function ln(x) '''
+    if not isinstance(x, Number):
+        raise EvaluationError("Invalid argument to ln function")
+    if x == zero:
+        raise CalculatorError(f'ln 0 is undefined.')
     # ln(re^iθ) = ln r + iθ
-    if isinstance(x, ComplexNumber): return ComplexNumber(lnFn(abs(x)), x.arg())
-    if isinstance(x, RealNumber) and x < zero: return ComplexNumber(lnFn(abs(x)), pi)
-    if x < one: return -lnFn(one / x)
+    if isinstance(x, ComplexNumber):
+        return ComplexNumber(lnFn(abs(x)), x.arg())
+    if isinstance(x, RealNumber) and x < zero:
+        return ComplexNumber(lnFn(abs(x)), pi)
+    if x < one:
+        return -lnFn(one / x)
     result = zero
     while x > ten:
         x /= ten
@@ -87,92 +114,119 @@ def lnFn(x):
     while True:
         x /= onePointOne
         result += ln1_1
-        if x < one: break
+        if x < one:
+            break
     # ln (1 + x) = x - x^2/2 + x^3/3 - x^4/4 + x^5/5 - ...
     # ln (1 - x) = -x - x^2/2 - x^3/3 - x^4/4 - x^5/5 - ...
-    xPow = dx = x = one - x
+    x_pow = dx = x = one - x
     denom = one
     while abs(dx) > st.epsilon:
         result -= dx
-        xPow *= x
+        x_pow *= x
         denom += one
-        dx = xPow / denom 
+        dx = x_pow / denom 
     return result.fast_continued_fraction()
 
-def sinFn(x):
+def sin_fn(x):
+    ''' sine function sin(x) '''
     if isinstance(x, ComplexNumber):
         eiz = exp(imag_i * x)
         return (eiz - (one / eiz)) / two / imag_i
     elif not isinstance(x, Number):
         raise EvaluationError('Invalid argument to trig function')
-    if x < zero: return -sinFn(-x)
+    if x < zero:
+        return -sin_fn(-x)
     x = x % (pi * two)
-    if x > pi * three / two: return -sinFn(pi * two - x)
-    elif x > pi: return -sinFn(x - pi)
-    elif x > pi / two: return sinFn(pi - x)
-    sum = xPow = dx = x
+    if x > pi * three / two:
+        return -sin_fn(pi * two - x)
+    elif x > pi:
+        return -sin_fn(x - pi)
+    elif x > pi / two:
+        return sin_fn(pi - x)
+    total = x_pow = dx = x
     xSq = -x * x
     mul = fac = one
     while abs(dx) > st.epsilon:
         mul += two
         fac *= mul * (mul - one)
-        xPow *= xSq
-        dx = (xPow / fac).fast_continued_fraction()
-        sum += dx
-    return sum.fast_continued_fraction()
+        x_pow *= xSq
+        dx = (x_pow / fac).fast_continued_fraction()
+        total += dx
+    return total.fast_continued_fraction()
 
-def cosFn(x):
-    return sinFn(pi / two - x)
+def cos_fn(x):
+    ''' cosine function cos(x) '''
+    return sin_fn(pi / two - x)
 
-def tanFn(x):
-    return sinFn(x) / cosFn(x)
+def tan_fn(x):
+    ''' tangent function tan(x) '''
+    return sin_fn(x) / cos_fn(x)
 
-def secFn(x):
-    return one / cosFn(x)
+def sec_fn(x):
+    ''' secant function sec(x) '''
+    return one / cos_fn(x)
 
-def cscFn(x):
-    return one / sinFn(x)
+def csc_fn(x):
+    ''' cosecant function csc(x) '''
+    return one / sin_fn(x)
 
-def cotFn(x):
-    return one / tanFn(x)
+def cot_fn(x):
+    ''' cotangent function cot(x) '''
+    return one / tan_fn(x)
 
-def sinhFn(x):
+def sinh_fn(x):
+    ''' hyperbolic sine function sinh(x) '''
     return ((ex := exp(x)) - one / ex) / two
 
-def coshFn(x):
+def cosh_fn(x):
+    ''' hyperbolic cosine function cosh(x) '''
     return ((ex := exp(x)) + one / ex) / two
 
-def tanhFn(x):
+def tanh_fn(x):
+    ''' hyperbolic tangent function tanh(x) '''
     return ((e2x := exp(two * x)) - one) / (e2x + one)
 
-def arcsinFn(x):
-    if not isinstance(x, RealNumber): raise EvaluationError("Invalid argument to arcsin function")
+def arcsin_fn(x):
+    ''' inverse sine function arcsin(x) '''
+    if not isinstance(x, RealNumber):
+        raise EvaluationError("Invalid argument to arcsin function")
     # https://en.wikipedia.org/wiki/List_of_mathematical_series
-    if x.sign == -1: return -arcsinFn(-x)
-    if x > one: raise CalculatorError('arcsin only accepts values from -1 to 1 inclusive')
-    if x * x > -x * x + one: return pi / two - arcsinFn(exponentiationFn(-x * x + one, half))
-    sum = term = x
+    if x.sign == -1:
+        return -arcsin_fn(-x)
+    if x > one:
+        raise CalculatorError('arcsin only accepts values from -1 to 1 inclusive')
+    if x * x > -x * x + one:
+        return pi / two - arcsin_fn(exponentiation_fn(-x * x + one, half))
+    total = term = x
     xsqr = x * x
     k = zero
     while abs(term) > st.epsilon:
         k += one
         term *= xsqr * (k * two) * (k * two - one) / four / k / k
         term = term.fast_continued_fraction()
-        sum += term / (k * two + one)
-    return sum.fast_continued_fraction()
+        total += term / (k * two + one)
+    return total.fast_continued_fraction()
 
-def arccosFn(x):
-    if not isinstance(x, RealNumber): raise EvaluationError("Invalid argument to arccos function")
-    if x.sign == -1: return pi - arccosFn(-x)
-    if x > one: raise CalculatorError('arccos only accepts values from -1 to 1 inclusive')
-    return pi / two - arcsinFn(x)
+def arccos_fn(x):
+    ''' inverse cosine function arccos(x) '''
+    if not isinstance(x, RealNumber):
+        raise EvaluationError("Invalid argument to arccos function")
+    if x.sign == -1:
+        return pi - arccos_fn(-x)
+    if x > one:
+        raise CalculatorError('arccos only accepts values from -1 to 1 inclusive')
+    return pi / two - arcsin_fn(x)
 
-def arctanFn(x):
-    if not isinstance(x, RealNumber): raise EvaluationError("Invalid argument to arctan function")
-    if x.sign == -1: return -arctanFn(-x)
-    if x > one: return pi / two - arctanFn(one / x)
+def arctan_fn(x):
+    ''' inverse tangent function arctan(x) '''
+    if not isinstance(x, RealNumber):
+        raise EvaluationError("Invalid argument to arctan function")
+    if x.sign == -1:
+        return -arctan_fn(-x)
+    if x > one:
+        return pi / two - arctan_fn(one / x)
     # https://en.wikipedia.org/wiki/Arctangent_series
-    sum = term = x / (x * x + one)
+    total = term = x / (x * x + one)
     factor = term * x
     num = two
     while abs(term) > st.epsilon:
@@ -180,52 +234,78 @@ def arctanFn(x):
         term *= num
         term /= num + one
         term = term.fast_continued_fraction()
-        sum += term
-        sum = sum.fast_continued_fraction()
+        total += term
+        total = total.fast_continued_fraction()
         num += two
-    return sum
+    return total
 
-def absFn(x): return abs(x)
-def conjFn(x): return x.conj()
-def argFn(x): return x.arg()
+def abs_fn(x):
+    ''' absolute value function abs(x) '''
+    return abs(x)
 
-def realPartFn(x):
-    if isinstance(x, RealNumber): return x
-    if isinstance(x, ComplexNumber): return x.real
+def conj_fn(x): 
+    ''' complex conjugate function conj(x) '''
+    return x.conj()
+
+def arg_fn(x): 
+    ''' argument function arg(x) '''
+    return x.arg()
+
+def real_part_fn(x):
+    ''' real part function Re(x) '''
+    if isinstance(x, RealNumber):
+        return x
+    if isinstance(x, ComplexNumber):
+        return x.real
     raise EvaluationError('Re() expects a complex number')
 
-def imPartFn(x):
-    if isinstance(x, RealNumber): return zero
-    if isinstance(x, ComplexNumber): return x.im
+def im_part_fn(x):
+    ''' imaginary part function Im(x) '''
+    if isinstance(x, RealNumber):
+        return zero
+    if isinstance(x, ComplexNumber):
+        return x.im
     raise EvaluationError('Im() expects a complex number')
 
-def signumFn(x):
+def signum_fn(x):
+    ''' signum function sgn(x) '''
     if not isinstance(x, RealNumber):
         raise EvaluationError('sgn() expects a real number')
     return one if x.sign == 1 else -one if x.sign == -1 else zero
 
-def assignmentFn(L, R, mem=None):
+def assignment_fn(L, R, mem=None):
+    ''' assignment operator L = R '''
     from calc_tuples import LTuple
-    if mem is None: raise MemoryError('No Memory object passed to assignment operator')
-    if not isinstance(L, LValue): raise EvaluationError('Can only assign to LValue')
-    if isinstance(L, LTuple): return L.assign(R, mem=mem)
+    if mem is None:
+        raise MemoryError('No Memory object passed to assignment operator')
+    if not isinstance(L, LValue):
+        raise EvaluationError('Can only assign to LValue')
+    if isinstance(L, LTuple):
+        return L.assign(R, mem=mem)
     mem.add(L.name, R)
     return R
 
-def indexFn(tup, idx):
+def index_fn(tup, idx):
+    ''' indexing operator tup @ idx '''
     from calc_tuples import Tuple
-    if not isinstance(tup, Tuple): raise EvaluationError("Index operator expects a tuple")
-    if not isinstance(idx, RealNumber) or not idx.is_int(): raise EvaluationError("Index must be an integer")
+    if not isinstance(tup, Tuple):
+        raise EvaluationError("Index operator expects a tuple")
+    if not isinstance(idx, RealNumber) or not idx.is_int():
+        raise EvaluationError("Index must be an integer")
     idx = int(idx)
-    if idx < 0 or idx >= len(tup): raise EvaluationError(f"index {idx} is out of bounds for this tuple")
+    if idx < 0 or idx >= len(tup):
+        raise EvaluationError(f"index {idx} is out of bounds for this tuple")
     return tup.tokens[idx]
 
-def tupLengthFn(tup):
+def tupLength_fn(tup):
+    ''' tuple length operator tup$ '''
     from calc_tuples import Tuple
-    if not isinstance(tup, Tuple): raise EvaluationError("Length operator expects a tuple")
+    if not isinstance(tup, Tuple):
+        raise EvaluationError("Length operator expects a tuple")
     return RealNumber(len(tup))
 
-def tupConcatFn(tup1, tup2):
+def tup_concat_fn(tup1, tup2):
+    ''' tuple concatenation operator tup1 <+> tup2 '''
     from calc_tuples import Tuple
     if not isinstance(tup1, Tuple) or not isinstance(tup2, Tuple):
         raise EvaluationError("Concatenation '<+>' expects tuples. End 1-tuples with ':)', e.g. '(3:)'")
@@ -233,20 +313,24 @@ def tupConcatFn(tup1, tup2):
     result.tokens = tup1.tokens + tup2.tokens
     return result
 
-def knifeFn(dir):
+def knife_fn(dir):
+    ''' knife operator dir is either '</' or '/>' '''
     def check(L, R):  # ensures that L is the index and R is the tuple.
         from calc_tuples import Tuple
-        if not isinstance(L, RealNumber) or not isinstance(R, Tuple): return False
-        if not L.is_int(): raise EvaluationError("Knife operator expects an integer operand")
+        if not isinstance(L, RealNumber) or not isinstance(R, Tuple):
+            return False
+        if not L.is_int():
+            raise EvaluationError("Knife operator expects an integer operand")
         L = int(L)
-        if L < 0 or L > len(R): raise EvaluationError(f"Unable to slice {L} element(s) from this tuple")
+        if L < 0 or L > len(R):
+            raise EvaluationError(f"Unable to slice {L} element(s) from this tuple")
         return True
-    
+
     def knife(L, R):
         if check(L, R):
             tup = R.morphCopy()
             mid = int(L)
-        elif check(R, L):
+        elif check(R, L): # pylint: disable=W1114
             tup = L.morphCopy()
             mid = len(tup) - int(R)
         else: raise EvaluationError(f"Knife operator '{dir}' expects a tuple and an integer")
@@ -256,6 +340,7 @@ def knifeFn(dir):
     return knife
 
 def comparator(x, y):
+    ''' comparator function: returns -1 if x<y, 0 if x==y, 1 if x>y '''
     from calc_tuples import Tuple
     match x, y:
         case Number(), Number(): return (x - y).fast_continued_fraction(epsilon=st.finalEpsilon)
@@ -263,11 +348,11 @@ def comparator(x, y):
             for i, j in zip(x, y):
                 c = comparator(i, j)
                 if c != zero: return c
-            else:
-                return zero if len(x) == len(y) else -one if len(x) < len(y) else one
+            return zero if len(x) == len(y) else -one if len(x) < len(y) else one
         case _, _: raise EvaluationError("Unable to compare operands")
 
-def lambdaArrowFn(L, R, *args, **kwargs):
+def lambda_arrow_fn(L, R, *args, **kwargs):
+    ''' lambda arrow operator L => R '''
     # The function will already be created in R
     return R
 
@@ -339,14 +424,14 @@ def invNormalCdfFn(L):
     return mu + sigma * sqrt2 * RealNumber(invErf(two * L - one))
 
 
-assignment = Infix(' = ', assignmentFn)
-lambdaArrow = Infix(' => ', lambdaArrowFn)
+assignment = Infix(' = ', assignment_fn)
+lambdaArrow = Infix(' => ', lambda_arrow_fn)
 spaceSeparator = Infix(' ', lambda x, y: x * y)
 semicolonSeparator = Infix('; ', lambda x, y: y)
 ternary_if = Ternary(' ? ', lambda cond, true_val, false_val: true_val if cond else false_val)
 ternary_else = Ternary(' : ')
-permutation = Infix('P', permutationFn)
-combination = Infix('C', combinationFn)
+permutation = Infix('P', permutation_fn)
+combination = Infix('C', combination_fn)
 ambiguousPlus = Operator('+?')
 ambiguousMinus = Operator('-?')
 addition = Infix(' + ', lambda x, y: x + y)
@@ -360,11 +445,11 @@ intDiv = Infix(' // ', lambda x, y: x // y)
 modulo = Infix(' % ', lambda x, y: x % y)
 positive = Prefix('+', lambda x: x)
 negative = Prefix('-', lambda x: -x)
-indexing = Infix(' @ ', indexFn)
-leftKnife = Infix(' </ ', knifeFn('</'))
-rightKnife = Infix(' /> ', knifeFn('/>'))
-tupConcat = Infix(' <+> ', tupConcatFn)
-tupLength = Postfix('$', tupLengthFn)
+indexing = Infix(' @ ', index_fn)
+leftKnife = Infix(' </ ', knife_fn('</'))
+rightKnife = Infix(' /> ', knife_fn('/>'))
+tupConcat = Infix(' <+> ', tup_concat_fn)
+tupLength = Postfix('$', tupLength_fn)
 lt = Infix(' < ', lambda x, y: one if comparator(x, y) < zero else zero)
 ltEq = Infix(' <= ', lambda x, y: one if comparator(x, y) <= zero else zero)
 gt = Infix(' > ', lambda x, y: one if comparator(x, y) > zero else zero)
@@ -381,44 +466,44 @@ logicalAND = Infix(' && ', lambda x, y: x if x.fast_continued_fraction(epsilon=s
 logicalOR = Infix(' || ', lambda x, y: x if x.fast_continued_fraction(epsilon=st.finalEpsilon) != zero else y)
 functionInvocation = Infix('<invoke>', lambda x, y, mem=None: x.invoke(y))
 functionComposition = Infix('', lambda x, y: x.invoke(y))
-sin = Prefix('sin', sinFn)
-cos = Prefix('cos', cosFn)
-tan = Prefix('tan', tanFn)
-sec = Prefix('sec', secFn)
-csc = Prefix('csc', cscFn)
-cot = Prefix('cot', cotFn)
-sinh = Prefix('sinh', sinhFn)
-cosh = Prefix('cosh', coshFn)
-tanh = Prefix('tanh', tanhFn)
-arcsin = Prefix('asin', arcsinFn)
-arccos = Prefix('acos', arccosFn)
-arctan = Prefix('atan', arctanFn)
+sin = Prefix('sin', sin_fn)
+cos = Prefix('cos', cos_fn)
+tan = Prefix('tan', tan_fn)
+sec = Prefix('sec', sec_fn)
+csc = Prefix('csc', csc_fn)
+cot = Prefix('cot', cot_fn)
+sinh = Prefix('sinh', sinh_fn)
+cosh = Prefix('cosh', cosh_fn)
+tanh = Prefix('tanh', tanh_fn)
+arcsin = Prefix('asin', arcsin_fn)
+arccos = Prefix('acos', arccos_fn)
+arctan = Prefix('atan', arctan_fn)
 ln = Prefix('ln', lnFn)
 lg = Prefix('lg', lambda x: lnFn(x) / ln10)
-weakSin = Prefix('sin ', sinFn)
-weakCos = Prefix('cos ', cosFn)
-weakTan = Prefix('tan ', tanFn)
-weakSec = Prefix('sec ', secFn)
-weakCsc = Prefix('csc ', cscFn)
-weakCot = Prefix('cot ', cotFn)
-weakSinh = Prefix('sinh ', sinhFn)
-weakCosh = Prefix('cosh ', coshFn)
-weakTanh = Prefix('tanh ', tanhFn)
-weakArcsin = Prefix('asin ', arcsinFn)
-weakArccos = Prefix('acos ', arccosFn)
-weakArctan = Prefix('atan ', arctanFn)
+weakSin = Prefix('sin ', sin_fn)
+weakCos = Prefix('cos ', cos_fn)
+weakTan = Prefix('tan ', tan_fn)
+weakSec = Prefix('sec ', sec_fn)
+weakCsc = Prefix('csc ', csc_fn)
+weakCot = Prefix('cot ', cot_fn)
+weakSinh = Prefix('sinh ', sinh_fn)
+weakCosh = Prefix('cosh ', cosh_fn)
+weakTanh = Prefix('tanh ', tanh_fn)
+weakArcsin = Prefix('asin ', arcsin_fn)
+weakArccos = Prefix('acos ', arccos_fn)
+weakArctan = Prefix('atan ', arctan_fn)
 weakLn = Prefix('ln ', lnFn)
 weakLg = Prefix('lg ', lambda x: lnFn(x) / ln10)
-weakSqrt = Prefix('sqrt ', lambda x: exponentiationFn(x, half))
-sqrt = Prefix('sqrt', lambda x: exponentiationFn(x, half))
-signum = PrefixFunction('sgn', signumFn)
-absolute = PrefixFunction('abs', absFn)
-argument = PrefixFunction('arg', argFn)
-conjugate = PrefixFunction('conj', conjFn)
-realPart = PrefixFunction('Re', realPartFn)
-imPart = PrefixFunction('Im', imPartFn)
-exponentiation = Infix('^', exponentiationFn)
-factorial = Postfix('!', factorialFn)
+weakSqrt = Prefix('sqrt ', lambda x: exponentiation_fn(x, half))
+sqrt = Prefix('sqrt', lambda x: exponentiation_fn(x, half))
+signum = PrefixFunction('sgn', signum_fn)
+absolute = PrefixFunction('abs', abs_fn)
+argument = PrefixFunction('arg', arg_fn)
+conjugate = PrefixFunction('conj', conj_fn)
+realPart = PrefixFunction('Re', real_part_fn)
+imPart = PrefixFunction('Im', im_part_fn)
+exponentiation = Infix('^', exponentiation_fn)
+factorial = Postfix('!', factorial_fn)
 vectorDotProduct = Infix('.', vectorDotProductFn)
 vectorCrossProduct = Infix('><', vectorCrossProductFn)
 normpdf = PrefixFunction('normpdf', normalPdfFn)

@@ -1,59 +1,62 @@
+''' Module lexer '''
+
+import re
 from calc_expressions import Expression
 from calc_number import RealNumber
-from calc_operators import Operator, Infix, Prefix, Postfix
+from calc_operators import Infix, Prefix, Postfix
 from calc_vars import WordToken, Value
 import calc_op as op
 from calc_errors import ParseError
 from calc_memory import Memory
-import re
 
 # Performs surface-level parsing and validation. Does not attempt to split WordTokens or evaluate expressions.
 
 class Lexer:
+    ''' Lexer class for tokenizing input strings '''
 
     def __init__(self, expr_string='', mem=None):
-        if mem is None: 
+        if mem is None:
             mem = Memory(test=True)
         self._tokens = []
-        self._posList = []
+        self._pos_list = []
         self._pos = 0
         self.current_string = self.expr_string = expr_string
-    
+
     def next(self):
+        ''' Get the next token and its position '''
         if len(self._tokens) > 0:
-            return self._tokens.pop(0), self._posList.pop(0)
-        else:
-            return self.prep_next_token().next()
+            return self._tokens.pop(0), self._pos_list.pop(0)
+        return self.prep_next_token().next()
 
     def peek(self):
+        ''' Peek at the next token and its position without removing it '''
         if len(self._tokens) > 0:
-            return self._tokens[0], self._posList[0]
-        else:
-            return self.prep_next_token().peek()
+            return self._tokens[0], self._pos_list[0]
+        return self.prep_next_token().peek()
 
     def prep_next_token(self):
-
+        ''' Prepare the next token and its position '''
         def add_token(t, m):
             print(f'{self._pos:2d}: {t}')
             self._tokens.append(t)
-            self._posList.append(self._pos + m.span(1)[0])
+            self._pos_list.append(self._pos + m.span(1)[0])
             self._pos += m.span()[1]
             self.current_string = self.current_string[m.span()[1]:]
             return self
 
         if self.current_string == '':
             self._tokens.append(None)
-            self._posList.append(None)
+            self._pos_list.append(None)
             return self
-                
+
         if m := re.match(r'([(){}[\]])', self.current_string):
             return add_token(self.current_string[0], m)
 
         if m := re.match(r'(\d+(?:\.\d*)?|\.\d+)', self.current_string):  # Number. Cannot follow Number, space_separator, or Var
             return add_token(RealNumber(m.group()), m)
-            
+
         for regex in op.regex:
-            if m := re.match(regex, self.current_string): 
+            if m := re.match(regex, self.current_string):
                 return add_token(op.regex[regex], m)
         if m := re.match(r'([A-Za-z](?:\w*(?:\d(?!(?:[0-9.]))|[A-Za-z_](?![A-Za-z])))?)', self.current_string):  # Word token (might be a concatenation of vars & possible func at the end)
             return add_token(WordToken(m.group()), m)
@@ -70,12 +73,13 @@ def parse(s, start_pos=0, brackets='', mem=None, debug=False):
             pos += m.span()[1]
             s = s[m.span()[1]:]
 
-    if mem is None: 
+    if mem is None:
         raise ParseError('No memory provided to parser!')
-    
+
     # check for commands
-    if m := re.match(r'\s*help\s*', s): 
-        print("Help is on the way!"); return None
+    if m := re.match(r'\s*help\s*', s):
+        print("Help is on the way!")
+        return None
     if m := re.match(r'\s*vars\s*', s):
         print("\nUser-defined Variables")
         print("======================")
@@ -114,7 +118,9 @@ def parse(s, start_pos=0, brackets='', mem=None, debug=False):
                     add_token(this_token, m)
                     found_token = True
                     break
-            if found_token: continue            
+
+            if found_token:
+                continue            
             # Unable to parse token
             if m := re.match(r'[A-Za-z](?:\w*(?:\d(?!(?:[0-9.]))|[A-Za-z_](?![A-Za-z])))?', s):  # Word token (might be a concatenation of vars & possible func at the end)
                 # if tokens[-1] is not None and tokens[-1] is not Op.assignment: raise ParseError(f'Cannot assign to invalid l-value (pos {start_pos + pos}). Did you mean "==" instead?')
@@ -130,9 +136,8 @@ def parse(s, start_pos=0, brackets='', mem=None, debug=False):
     match tokens[:3]:
         case [WordToken(), Expression(), op.assignment]:  # function to be assigned
             pass
-    
-    return expr
 
+    return expr
 
 def validate(tokens, pos_list, brackets=''):
     # Validation checks

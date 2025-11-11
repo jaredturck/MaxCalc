@@ -306,15 +306,15 @@ class ComplexNumber(Number):  # Must be non-real valued, i.e. must have an imagi
         return False
 
     def __abs__(self):
-        from calc_op import exponentiationFn
-        return exponentiationFn(self.real * self.real + self.im * self.im, half)
+        from calc_op import exponentiation_fn
+        return exponentiation_fn(self.real * self.real + self.im * self.im, half)
 
     def arg(self):
         ''' Return argument of complex number '''
         if self.real == zero:
             return pi / two if self.im > zero else -pi / two
-        from calc_op import arctanFn
-        argument = arctanFn(self.im / self.real)
+        from calc_op import arctan_fn
+        argument = arctan_fn(self.im / self.real)
         if self.real < 0:
             argument += pi if self.im > zero else -pi
         # 2nd quad get -theta but supposed to be pi - theta

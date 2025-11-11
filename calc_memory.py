@@ -1,3 +1,5 @@
+''' Module memory '''
+
 from calc_number import e, pi, imag_i, Number
 from calc_functions import Function, FuncComposition
 import calc_op as op
@@ -6,6 +8,7 @@ from calc_settings import Settings
 st = Settings()
 
 class Memory:
+    ''' Memory class for storing variables and functions. '''
 
     # Base class intended for use by Functions.
 
@@ -50,98 +53,115 @@ class Memory:
         'invnorm': op.invnorm,
     }
 
-    def __init__(self, filename=None):
+    def __init__(self):
         self.vars = {}
 
-    def get(self, str):
+    def get(self, txt):
+        ''' Get variable from memory. '''
         seq = [Memory.topList, self.vars if self is not Memory.globalMem else {}, Memory.globalMem.vars, Memory.baseList]
         for dct in seq:
-            if str in dct: return dct[str]
+            if txt in dct:
+                return dct[txt]
 
-    def add(self, str, val):
-        if isinstance(val, Number): val = val.fast_continued_fraction(epsilon=st.epsilon)
-        self.vars[str] = val
+    def add(self, txt, val):
+        ''' Add variable to memory. '''
+        if isinstance(val, Number):
+            val = val.fast_continued_fraction(epsilon=st.epsilon)
+        self.vars[txt] = val
 
-    def delete(self, key):  # Functions should never have stuff in their memory deleted
-        raise NotImplementedError
-    
+    def delete(self, key):
+        ''' Delete variable from memory. '''
+        raise NotImplementedError # Functions should never have stuff in their memory deleted
+
     def copy(self):
+        ''' Return a copy of this Memory object. '''
         cpy = Memory()
         cpy.__dict__.update(self.__dict__)
         cpy.vars = self.vars.copy()
         return cpy
-    
-    def __iter__(self): yield from self.vars
+
+    def __iter__(self):
+        ''' Iterate over variables in memory. '''
+        yield from self.vars
 
     def __str__(self):
+        ''' Return a string representation of the memory. '''
         return "{{" + '; '.join([f"{v}" if isinstance(v, Function) and k == v.name else f"{k} = {v}" for k, v in self.vars.items()]) + "}}"
 
-    def strWithout(self, keyWithout):
-        return "{{" + '; '.join([f"{v}" if isinstance(v, Function) and k == v.name else f"{k} = {v}" for k, v in self.vars.items() if k != keyWithout]) + "}}"
+    def str_without(self, key_without):
+        ''' Return a string representation of the memory without a specific key. '''
+        return "{{" + '; '.join([f"{v}" if isinstance(v, Function) and k == v.name else f"{k} = {v}" for k, v in self.vars.items() if k != key_without]) + "}}"
 
-    def fullDict(self):
+    def full_dict(self):
+        ''' Return a full dictionary of the memory, including base and global variables. '''
         return Memory.baseList | Memory.globalMem.vars | self.vars | Memory.topList
 
-    # def __getitem__(self, key): return self.get(key)
-    # def __setitem__(self, key, value): self.add(key, value)
-    # def __delitem__(self, key): self.delete(key)
-    
-
 class GlobalMemory(Memory):
+    ''' Global memory class for storing variables and functions. '''
 
     def __init__(self, filepath=None):
-        if filepath is None: raise MemoryError("Must specify a memory file.")
-        from pathlib import Path
+        if filepath is None:
+            raise MemoryError("Must specify a memory file.")
         self.vars = {}
         self.trie = None
         self.filepath = filepath
-        self.writeLock = True
+        self.write_lock = True
         Memory.globalMem = self
-        if filepath.exists(): self.load()
+        if filepath.exists():
+            self.load()
 
     def add(self, string, val, save=True):
+        ''' Add variable to memory. '''
         if string == 'ans':
             # if 'ans' in self.vars: self.vars.pop('ans')
             self.vars['ans'] = val
         else:
-            if isinstance(val, Number): val = val.fast_continued_fraction(epsilon=st.epsilon)
-            needSort = string not in self.vars
+            if isinstance(val, Number):
+                val = val.fast_continued_fraction(epsilon=st.epsilon)
+            need_sort = string not in self.vars
             self.vars[string] = val
-            if self.trie is not None: self.trie.insert(string)
-            if needSort:
+            if self.trie is not None:
+                self.trie.insert(string)
+            if need_sort:
                 self.vars = {k: self.vars[k] for k in sorted(self.vars, key=lambda x: -isinstance(self.vars[x], Function))}
-        if not self.writeLock and save: self.save()
+        if not self.write_lock and save:
+            self.save()
 
     def delete(self, string):
-        strList = string.replace(',', ' ').split()
+        ''' Delete variable from memory. '''
+        str_list = string.replace(',', ' ').split()
         deleted = []
-        for s in strList:
+        for s in str_list:
             if s in self.vars:
                 del self.vars[s]
                 deleted.append(s)
                 if s not in self.baseList:
                     self.trie.delete(s)
-        if not self.writeLock and deleted: self.save()
+        if not self.write_lock and deleted:
+            self.save()
         return deleted
 
     def copy(self):
         return Memory()  # global returns a blank Memory object when copy is called
 
     def save(self):
-        with open(self.filepath, "w") as f:
+        ''' Save memory to file. '''
+        with open(self.filepath, 'w', encoding='utf-8') as f:
             for var, value in self.vars.items():
                 if isinstance(value, FuncComposition):
                     f.write(f"{var} = {value.name}\n")
                 elif isinstance(value, Function):
-                    if var != value.name: f.write(f"{var} = ")
+                    if var != value.name:
+                        f.write(f"{var} = ")
                     f.write(f"{str(value)}\n")
                 else:
                     f.write(f"{var} = {value.fromString if hasattr(value, 'fromString') else str(value)}\n")
 
     def load(self):
+        ''' Load memory from file. '''
         import calc_parser
-        with open(self.filepath) as f:
+        with open(self.filepath, 'r', encoding='utf-8') as f:
             for line in f:
                 calc_parser.parse(line).value(mem=self)
-        self.writeLock = False
+        self.write_lock = False
         self.save()

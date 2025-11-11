@@ -18,7 +18,7 @@ class Calculator:
         self.historyPath = self.basedir/'history.txt'
         self.st = Settings(self.settingsPath)
         self.mainMem = GlobalMemory(self.memPath)
-        self.mainMem.trie = self.trie = Trie.fromCollection(self.mainMem.fullDict())
+        self.mainMem.trie = self.trie = Trie.fromCollection(self.mainMem.full_dict())
         self.ui = UI(self.mainMem, self.historyPath)
         self.main_loop = True
         sys.setrecursionlimit(500000)
@@ -37,10 +37,10 @@ class Calculator:
             re.compile(r'^\s*(?:=|sto(?:re)? |->)\s*([A-Za-z]\w*)\s*$'): self.module_display
         }
     
-    def HandleErrors(function):
-        def wrapper(*args, **kwargs):
+    def HandleErrors(self, function):
+        def wrapper(self, *args, **kwargs):
             try:
-                return function(*args, **kwargs)
+                return function(self, *args, **kwargs)
 
             except module_errors.CalculatorError as e:
                 if len(e.args) > 1: 
@@ -151,12 +151,12 @@ class Calculator:
                 expr = parse(inp)
                 if expr is None: 
                     continue
-                self.mainMem.writeLock = True
+                self.mainMem.write_lock = True
                 val = expr.value(self.mainMem)
                 if isinstance(val, Number): 
                     val = val.fast_continued_fraction(epsilon=self.st.finalEpsilon)
                 self.ui.addText("display", (val.disp(self.st.get('frac_max_length'), self.st.get('final_precision')), UI.BRIGHT_GREEN_ON_BLACK))
-                self.mainMem.writeLock = False
+                self.mainMem.write_lock = False
                 self.mainMem.add('ans', val)
                     
             self.ui.redraw("display")

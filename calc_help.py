@@ -1,8 +1,11 @@
+''' Module help '''
+
 import webbrowser
 import sys
 import os
 
 def display():
+    ''' Display the help page in the web browser '''
     url = 'https://github.com/max-min-median/Calculator/blob/main/README.md'
     if 'termux' in sys.prefix.lower() or 'com.termux' in sys.executable.lower():
         os.system(f"termux-open-url {url}")

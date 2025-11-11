@@ -155,7 +155,7 @@ class LTuple(LValue, Tuple):  # LTuple elements are all Expressions.
                     raise ParseError("Parameter without default argument cannot be omitted")
                 return param.value(mem)
             else:
-                return op.assignmentFn(param.tokens[0], val, mem=mem)
+                return op.assignment_fn(param.tokens[0], val, mem=mem)
 
         if mem is None: raise MemoryError('LTuple requires memory object to perform assignment')
         if len(R) > len(self): raise ParseError(f"Cannot destructure a {f"tuple of size {len(R)}" if isinstance(R, Tuple) else "value"} into an LTuple of size {len(self)}")
