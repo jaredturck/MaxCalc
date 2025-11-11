@@ -27,31 +27,31 @@ def parse(s, offset=0, brackets='', parent=None):
                 return True
         return False
     
-    expr = Expression(inputStr=s, brackets=brackets, offset=offset)
-    tokens, posList = expr.tokens, expr.tokenPos
+    expr = Expression(input_str=s, brackets=brackets, offset=offset)
+    tokens, posList = expr.tokens, expr.token_pos
     i = 0
     # print(f"Parsing '{s}', brackets: {brackets}, parent: {parent}")
     while ss := s[i:]:
         if (ch := ss[0]) == ',' or ch in ')]}' or (ch := ss[:2]) in [f'{ONE_TUPLE_INDICATOR}{ch}' for ch in ')]}']:  # last item in expression / tuple
             if parent is None: raise ParseError(f"Unexpected {"comma separator ','" if ch == ',' else f"delimiter '{ch}'"} outside a tuple. Please enclose tuples in parentheses '()'.", (offset, offset + 1))
-            expr.inputStr = expr.inputStr[:i]
+            expr.input_str = expr.input_str[:i]
             validate(expr)
             return expr
         elif ss[0] in '([{': # tuple or bracketed expression
-            tup = Tuple(inputStr=ss[0:], brackets={'(': '()', '[': '[]', '{': '{}'}[ss[0]], offset=i)
+            tup = Tuple(input_str=ss[0:], brackets={'(': '()', '[': '[]', '{': '{}'}[ss[0]], offset=i)
             i += 1
             while True:
                 exprStartPos = i
                 childExpr = parse(s[i:], offset=offset + i, brackets='', parent=tup)
                 tup.tokens.append(childExpr)
-                tup.tokenPos.append((exprStartPos, exprStartPos + len(childExpr.inputStr)))
-                i += len(childExpr.inputStr)
+                tup.token_pos.append((exprStartPos, exprStartPos + len(childExpr.input_str)))
+                i += len(childExpr.input_str)
                 if s[i:i+1] == ',':
                     i += 1
                 elif (rb := ' ') and i >= len(s) or (rb := s[i]) == tup.brackets[-1] or (rb := s[i:i+2]) == f'{ONE_TUPLE_INDICATOR}{tup.brackets[-1]}':
-                    expr.tokenPos.append((tup.offset, i + len(rb)))
+                    expr.token_pos.append((tup.offset, i + len(rb)))
                     if len(tup) == 1 and len(tup.tokens[0].tokens) == 0:  # Tuple contains 1 empty expression; remove it.
-                        tup.tokens, tup.tokenPos = [], []
+                        tup.tokens, tup.token_pos = [], []
                     if len(rb) != 2 and len(tup) == 1:  # convert 1-tuples to Expressions unless they end with ':)'
                         tup = tup.toExpr()
                     i += len(rb)
@@ -79,9 +79,9 @@ def validate(expr):
     # Validation checks
     i = 1
     # Remove space separators that come at the start or end
-    if len(expr.tokens) > 0 and expr.tokens[0] == op.spaceSeparator: expr.tokens.pop(0); expr.tokenPos.pop(0)
-    if len(expr.tokens) > 0 and expr.tokens[-1] == op.spaceSeparator: expr.tokens.pop(); expr.tokenPos.pop()
-    lst, posList = [None] + expr.tokens + [None], [None] + expr.tokenPos + [None]
+    if len(expr.tokens) > 0 and expr.tokens[0] == op.spaceSeparator: expr.tokens.pop(0); expr.token_pos.pop(0)
+    if len(expr.tokens) > 0 and expr.tokens[-1] == op.spaceSeparator: expr.tokens.pop(); expr.token_pos.pop()
+    lst, posList = [None] + expr.tokens + [None], [None] + expr.token_pos + [None]
     while i < len(lst) - 1:
         # Transform / remove some types of tokens
         match lst[i-1:i+2]:
@@ -104,7 +104,7 @@ def validate(expr):
                 i -= 2
             case [op.assignment | op.lambdaArrow, Expression(), _maybeSpaceSeparator_] if not isinstance(lst[i], Closure) and lst[i].brackets == '{}' and len(lst[i]) == 1 and isinstance(w := lst[i].tokens[0], Expression) and w.brackets == '{}':
                 lst[i] = lst[i].morphCopy(Closure)
-                lst[i].tokenPos = lst[i].tokens[0].tokenPos
+                lst[i].token_pos = lst[i].tokens[0].token_pos
                 lst[i].tokens = lst[i].tokens[0].tokens
                 lst[i].brackets = '{{', '}}'
                 if lst[i + 1] == op.spaceSeparator:
@@ -131,7 +131,7 @@ def validate(expr):
                     i -= 1
                     continue
         i += 1
-    expr.tokens, expr.tokenPos = lst[1:-1], posList[1:-1]
+    expr.tokens, expr.token_pos = lst[1:-1], posList[1:-1]
 
 # test code
 if __name__ == '__main__':

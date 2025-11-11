@@ -1,12 +1,16 @@
+''' Module curses test '''
+
 import curses
 
 def get_key(window):
+    ''' Get a key from the window, raising KeyboardInterrupt on CTRL+c '''
     key = window.getch()
     if key == 27: # CTRL+c
         raise KeyboardInterrupt
     return key
 
 def main():
+    ''' Main function to run the curses test '''
     # Initialize curses
     stdscr = curses.initscr()
 
@@ -24,10 +28,7 @@ def main():
     # color; user can test with has_color() later on.  The try/catch
     # works around a minor bit of over-conscientiousness in the curses
     # module -- the error return from C start_color() is ignorable.
-    try:
-        curses.start_color()
-    except:
-        pass
+    curses.start_color()
 
     # win = curses.newwin(height, width, begin_y, begin_x)
     stdscr.scrollok(1)

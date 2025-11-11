@@ -62,7 +62,7 @@ def exp(x):
         r = exp(x.real)
         return ComplexNumber(r * cosFn(x.im), r * sinFn(x.im))
     intPart = intPower(e, int(x))
-    x = x.fracPart()
+    x = x.frac_part()
     sum = term = i = one
     while (abs(term) >= st.epsilon):
         term = (term * x) / i
@@ -343,7 +343,7 @@ assignment = Infix(' = ', assignmentFn)
 lambdaArrow = Infix(' => ', lambdaArrowFn)
 spaceSeparator = Infix(' ', lambda x, y: x * y)
 semicolonSeparator = Infix('; ', lambda x, y: y)
-ternary_if = Ternary(' ? ', lambda cond, trueVal, falseVal: trueVal if cond else falseVal)
+ternary_if = Ternary(' ? ', lambda cond, true_val, false_val: true_val if cond else false_val)
 ternary_else = Ternary(' : ')
 permutation = Infix('P', permutationFn)
 combination = Infix('C', combinationFn)

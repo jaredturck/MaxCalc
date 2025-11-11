@@ -9,12 +9,12 @@ ONE_TUPLE_INDICATOR = ':'  # to be placed before the end bracket, e.g. (3:)
 
 class Tuple(Expression):  # Tuple elements are all Expressions
 
-    def __init__(self, inputStr=None, brackets='()', offset=0):
-        super().__init__(inputStr=inputStr, brackets=brackets, offset=offset)
+    def __init__(self, input_str=None, brackets='()', offset=0):
+        super().__init__(input_str=input_str, brackets=brackets, offset=offset)
 
     @staticmethod
     def fromFirst(expr):  # begins the making of a Tuple from the first character after '('
-        tup = Tuple(inputStr=expr.inputStr, brackets=expr.brackets, offset=expr.offset)
+        tup = Tuple(input_str=expr.input_str, brackets=expr.brackets, offset=expr.offset)
         tup.tokens = [expr]
         return tup
 
@@ -35,9 +35,9 @@ class Tuple(Expression):  # Tuple elements are all Expressions
         expr.brackets = self.brackets
         return expr
 
-    def disp(self, fracMaxLength, decimalPlaces):
+    def disp(self, frac_max_length, decimal_places):
         tempTokens = [token.fast_continued_fraction(epsilon=st.finalEpsilon) if hasattr(token, 'fast_continued_fraction') else token for token in self.tokens]
-        return self.brackets[:1] + ', '.join(['-' if x is None else x.disp(fracMaxLength, decimalPlaces) for x in tempTokens]) + self.brackets[1:]
+        return self.brackets[:1] + ', '.join(['-' if x is None else x.disp(frac_max_length, decimal_places) for x in tempTokens]) + self.brackets[1:]
 
     def __len__(self): return len(self.tokens)
 
@@ -113,8 +113,8 @@ class Tuple(Expression):  # Tuple elements are all Expressions
         return self.brackets[:1] + ', '.join([str(x) for x in self.tokens]) + (':' if len(self) == 1 else '') + self.brackets[1:]
 
     def value(self, mem=None):
-        tup = Tuple(inputStr=self.inputStr, brackets=self.brackets, offset=self.offset)
-        tup.tokenPos = self.tokenPos
+        tup = Tuple(input_str=self.input_str, brackets=self.brackets, offset=self.offset)
+        tup.token_pos = self.token_pos
         tup.tokens = [expr.value(mem=mem) for expr in self.tokens]
         return tup
 
@@ -130,7 +130,7 @@ class LTuple(LValue, Tuple):  # LTuple elements are all Expressions.
             if isinstance(expr.tokens[0], Tuple) and not isinstance(expr.tokens[0], LTuple):
                 expr.tokens[0] = LTuple(expr.tokens[0])
             elif not isinstance(expr.tokens[0], (WordToken, LValue)) or len(expr.tokens) > 1 and expr.tokens[1] != op.assignment:
-                raise ParseError("Each parameter must be exactly one WordToken or LValue (with optional default expression)", (expr.tokenPos[0][0], expr.tokenPos[-1][-1]))
+                raise ParseError("Each parameter must be exactly one WordToken or LValue (with optional default expression)", (expr.token_pos[0][0], expr.token_pos[-1][-1]))
             elif isinstance(expr.tokens[0], WordToken):
                 expr.tokens[0] = expr.tokens[0].morphCopy(LValue)
 

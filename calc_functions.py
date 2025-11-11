@@ -45,7 +45,7 @@ class Function(Value):
     # - perform the evaluation
 
         if len(argTuple) > len(self.params): raise EvaluationError(f"Function '{self.name}' expects {len(self.params)} parameters but received {len(argTuple)}")
-        self.expression.parsed = self.expression.parsedPos = None
+        self.expression.parsed = self.expression.parsed_pos = None
         closure = self.closure.copy()
         self.params.assign(argTuple, closure)
         # evaluate the expression

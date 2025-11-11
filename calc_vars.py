@@ -10,7 +10,7 @@ class Value:
 
     def __len__(self): return 1
 
-    def disp(self, fracMaxLength, finalPrecision):
+    def disp(self, frac_max_length, finalPrecision):
         return str(self)
     
     def morphCopy(self, cls=None):  # makes a copy of the object, optionally changing its class
@@ -68,7 +68,7 @@ class WordToken:
         # 'greediest' (longer tokens are prioritized) splits come first.
         def trySplit(s, numAllowed=False, onlyFuncsAllowed=False):
             if s == '': return [[]], [[]]
-            lst, varList = [], []
+            lst, var_list = [], []
             for i in reversed(range(len(s))):
                 val = mem.get(thisWord := s[:i+1])
                 if val is not None:
@@ -82,20 +82,20 @@ class WordToken:
                     continue
                 splitRest, splitRestVars = trySplit(s[i+1:], numAllowed=isinstance(thisWord, (Prefix, Infix)), onlyFuncsAllowed=(type(thisWord) == Function))
                 lst += [[s[:i+1]] + spl for spl in splitRest]
-                varList += [[thisWord] + spl for spl in splitRestVars]
-            return lst, varList
+                var_list += [[thisWord] + spl for spl in splitRestVars]
+            return lst, var_list
         
-        splitList, varList = trySplit(self.name)
+        split_list, var_list = trySplit(self.name)
 
-        if len(splitList) == 0: raise ParseError(f"Unable to parse '{self.name}'")
-        # tmp = ['∙'.join(s) for s in splitList]
-        if len(splitList) > 1:
+        if len(split_list) == 0: raise ParseError(f"Unable to parse '{self.name}'")
+        # tmp = ['∙'.join(s) for s in split_list]
+        if len(split_list) > 1:
             from calc_ui import UI
-            UI().addText("display", ("Warning: ", UI.YELLOW_ON_BLACK), (f"Found {len(splitList)} ways to parse ", ), (self.name, UI.BRIGHT_PURPLE_ON_BLACK), ('.', ))
-            tmp = [item for substr in splitList[0] for item in ((substr, UI.BRIGHT_PURPLE_ON_BLACK), ("∙", ))][:-1]
+            UI().addText("display", ("Warning: ", UI.YELLOW_ON_BLACK), (f"Found {len(split_list)} ways to parse ", ), (self.name, UI.BRIGHT_PURPLE_ON_BLACK), ('.', ))
+            tmp = [item for substr in split_list[0] for item in ((substr, UI.BRIGHT_PURPLE_ON_BLACK), ("∙", ))][:-1]
             UI().addText("display", (" (Using ", ), *tmp, (")", ), startNewLine=False)
             # ': " + ", ".join(tmp) + f". (selecting '{tmp[0]}')")
-        return splitList[0], varList[0]
+        return split_list[0], var_list[0]
 
     def morphCopy(self, cls=None):  # makes a copy of the object, optionally changing its class
         if cls is None: cls = type(self)

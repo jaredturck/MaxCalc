@@ -85,9 +85,9 @@ def parse(s, start_pos=0, brackets='', mem=None, debug=False):
         return None
 
     expr = Expression(brackets=brackets, mem=mem)
-    tokens, pos_list = expr.tokens, expr.tokenPos
+    tokens, pos_list = expr.tokens, expr.token_pos
     expr.start_pos = start_pos
-    expr.inputStr = s
+    expr.input_str = s
     pos = 0
 
     while s:
@@ -99,7 +99,7 @@ def parse(s, start_pos=0, brackets='', mem=None, debug=False):
             s = s[len(tokens[-1].input_string) + 2:]
         elif s[0] in ')]}': # end of bracketed expression
             if brackets and s[0] in brackets:
-                expr.inputStr = expr.inputStr[:pos]
+                expr.input_str = expr.input_str[:pos]
                 break
             else:
                 raise ParseError(f'Unmatched right delimiter "{s[0]}" at pos {start_pos + pos}')
@@ -125,7 +125,7 @@ def parse(s, start_pos=0, brackets='', mem=None, debug=False):
     # if brackets and s == '': raise BracketMismatchError(f'Unpaired left delimiter "{brackets[0]}" at pos {start_pos}')
     if not brackets and not tokens: return None
 
-    expr.tokens, expr.tokenPos = validate(tokens, pos_list, brackets=brackets)
+    expr.tokens, expr.token_pos = validate(tokens, pos_list, brackets=brackets)
 
     match tokens[:3]:
         case [WordToken(), Expression(), op.assignment]:  # function to be assigned

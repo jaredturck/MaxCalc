@@ -145,7 +145,7 @@ Update (v3.5.0) Lambda functions are now available
 | Logical | `&&`, `\|\|` |
 | Equality | `==`, `!=` |
 | Relational | `<`, `<=`, `>`, `>=` |
-| Ternary | `<expression> ? <trueVal> : <falseVal>` |
+| Ternary | `<expression> ? <true_val> : <false_val>` |
 | Complex | `abs`, `arg`, `conj`, `Re`, `Im` |
 | Tuple manipulaton | `<+>`, `@`, `$`, `</`, `/>` (see above) |
 | Vector dot and cross product | `.`, `><` |

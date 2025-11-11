@@ -75,7 +75,8 @@ class RealNumber(Number):
         s = '-' if self.sign == -1 else ''
         s += str(self.numerator // self.denominator)
         rem = self.numerator % self.denominator
-        if rem == 0: return s
+        if rem == 0:
+            return s
         rem_list = []
         s += '.'
         frac = ''
@@ -122,8 +123,10 @@ class RealNumber(Number):
             s = gamma - gamma % one
             lower = (lower[0] + s * upper[0], lower[1] + s * upper[1])
             # print(lower, s, lower[0] / lower[1])
-            if lower[1] != zero and abs(self - (num := lower[0] / lower[1])) < epsilon or gamma == s: return num
-            if max_denom != 'inf' and lower[1] > max_denom: return RealNumber(prev, fcf=False)
+            if lower[1] != zero and abs(self - (num := lower[0] / lower[1])) < epsilon or gamma == s:
+                return num
+            if max_denom != 'inf' and lower[1] > max_denom:
+                return RealNumber(prev, fcf=False)
             prev = lower
             lower, upper = upper, lower
             gamma = one / (gamma - s)
@@ -211,7 +214,7 @@ class RealNumber(Number):
     def __le__(self, other):
         return not self > other
 
-    def fracPart(self):
+    def frac_part(self):
         ''' Return the fractional part of the number '''
         return RealNumber(self.numerator % self.denominator * self.sign, self.denominator, fcf=False)
 
@@ -221,17 +224,17 @@ class RealNumber(Number):
     def __str__(self):
         return ('-' if self.sign == -1 else '') + str(self.numerator) + ('' if self.denominator == 1 else '/' + str(self.denominator))
 
-    def __repr__(self): 
+    def __repr__(self):
         return str(self)
 
-    def disp(self, fracMaxLength, decimalPlaces):
+    def disp(self, frac_max_length, decimal_places):
         ''' Display the number either as a fraction or decimal based on length '''
         if self.denominator == 1:
             return str(self)
         s = str(self)
-        if len(s) <= fracMaxLength:
-            return s + ' = ' + self.dec(dp=decimalPlaces)
-        return self.dec(dp=decimalPlaces)
+        if len(s) <= frac_max_length:
+            return s + ' = ' + self.dec(dp=decimal_places)
+        return self.dec(dp=decimal_places)
 
     @staticmethod
     def from_scientific_notation(significand, exponent):  # params are strings
@@ -291,10 +294,10 @@ class ComplexNumber(Number):  # Must be non-real valued, i.e. must have an imagi
 
     def fast_continued_fraction(self, epsilon=None, max_denom='inf'):
         ''' Compute the best rational approximation using continued fractions for both parts '''
-        if epsilon is None: 
+        if epsilon is None:
             epsilon = st.epsilon
         return ComplexNumber(
-            self.real.fast_continued_fraction(epsilon=epsilon, max_denom=max_denom), 
+            self.real.fast_continued_fraction(epsilon=epsilon, max_denom=max_denom),
             self.im.fast_continued_fraction(epsilon=epsilon, max_denom=max_denom)
         )
 
@@ -307,6 +310,7 @@ class ComplexNumber(Number):  # Must be non-real valued, i.e. must have an imagi
         return exponentiationFn(self.real * self.real + self.im * self.im, half)
 
     def arg(self):
+        ''' Return argument of complex number '''
         if self.real == zero:
             return pi / two if self.im > zero else -pi / two
         from calc_op import arctanFn
@@ -402,12 +406,12 @@ class ComplexNumber(Number):  # Must be non-real valued, i.e. must have an imagi
     def __repr__(self):
         return str(self)
 
-    def disp(self, fracMaxLength, decimalPlaces):
+    def disp(self, frac_max_length, decimal_places):
         if self.real.denominator == 1 and self.im.denominator == 1:
             return str(self)
-        if len(str(self.real)) <= fracMaxLength and len(str(self.im)) <= fracMaxLength:
-            return str(self) + ' = ' + self.dec(dp=decimalPlaces)
-        return self.dec(dp=decimalPlaces)
+        if len(str(self.real)) <= frac_max_length and len(str(self.im)) <= frac_max_length:
+            return str(self) + ' = ' + self.dec(dp=decimal_places)
+        return self.dec(dp=decimal_places)
 
 imag_i = ComplexNumber(zero, one)
 
