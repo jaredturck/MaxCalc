@@ -21,12 +21,34 @@ class Calculator:
         self.ui = UI(self.mainMem, self.historyPath)
         sys.setrecursionlimit(500000)
     
+    def HandleErrors(function):
+        def wrapper(*args, **kwargs):
+            try:
+                return function(*args, **kwargs)
+
+            except CalculatorError as e:
+                if len(e.args) > 1: 
+                    self.ui.addText("display", (' ' * (len(self.ui.prompt) + (span := e.args[1])[0] - 1) + '↗' + '‾' * (span[1] - span[0]), UI.BRIGHT_RED_ON_BLACK))
+                self.ui.addText("display", (f"{repr(e).split('(')[0]}: {e.args[0]}", UI.BRIGHT_RED_ON_BLACK))
+
+            except ZeroDivisionError as e:
+                self.ui.addText("display", (repr(e), UI.BRIGHT_RED_ON_BLACK))
+
+            except RecursionError:
+                self.ui.addText("display", ("RecursionError: Check for infinite recursion in functions.", UI.BRIGHT_RED_ON_BLACK))
+
+            except (EOFError, KeyboardInterrupt):
+                return None
+
+        return wrapper
+
     def module_help(self):
         help_module.display()
     
     def module_vars(self):
         if len(self.ui.text["display"]) > 0: 
             self.ui.addText("display")
+            
         self.ui.addText("display", ("User-defined Variables", UI.LIGHTBLUE_ON_BLACK))
         self.ui.addText("display", ("──────────────────────", ))
         
@@ -93,69 +115,58 @@ class Calculator:
             self.ui.trie.insert(m.group(1))
             self.ui.addText("display", (f'{m.group(1)}', UI.LIGHTBLUE_ON_BLACK), (' = ', ), (f'{self.mainMem.get(m.group(1)).value()}', UI.LIGHTBLUE_ON_BLACK))
 
+    @HandleErrors
     def main(self):
         while True:
-            try:
-                inp = self.ui.getInput(trie=self.trie)
+            inp = self.ui.getInput(trie=self.trie)
 
-                # check for commands
-                if m := re.match(r'^\s*help\s*$', inp):
-                    self.module_help()
+            # check for commands
+            if m := re.match(r'^\s*help\s*$', inp):
+                self.module_help()
 
-                elif m := re.match(r'^\s*vars\s*$', inp):
-                    self.module_vars()
+            elif m := re.match(r'^\s*vars\s*$', inp):
+                self.module_vars()
 
-                elif m := re.match(r'^\s*del\s(.*)$', inp):
-                    self.module_delete()
+            elif m := re.match(r'^\s*del\s(.*)$', inp):
+                self.module_delete()
 
-                elif m := re.match(r'^\s*(?:quit|exit)\s*$', inp):
-                    break
-
-                elif m := re.match(r'^\s*frac(?:\s+(\d+))?$', inp):
-                    self.module_frac()
-
-                elif m := re.match(r'^\s*prec(?:ision)?(?:\s+(\d+))?$', inp):
-                    self.module_prec()
-
-                elif m := re.match(r'^\s*disp(?:lay)?(?:\s+(\d+))?$', inp):
-                    self.module_display()
-
-                elif m := re.match(r'^\s*debug(?:\s+(\w+))?$', inp):
-                    self.module_debug()
-
-                elif m := re.match(r'^\s*(?:kb|keyboard)(?:\s+(\w+))?$', inp):
-                    self.module_keyboard()
-
-                elif m := re.match(r'^\s*(?:quick_exp(?:onents)?)(?:\s+(\w+))?$', inp):
-                    self.module_quick_exp()
-
-                elif inp.strip() == '':
-                    continue
-
-                elif m := re.match(r'^\s*(?:=|sto(?:re)? |->)\s*([A-Za-z]\w*)\s*$', inp):
-                    self.module_sto()
-
-                else:
-                    expr = parse(inp)
-                    if expr is None: continue
-                    self.mainMem.writeLock = True
-                    val = expr.value(self.mainMem)
-                    if isinstance(val, Number): val = val.fastContinuedFraction(epsilon=st.finalEpsilon)
-                    self.ui.addText("display", (val.disp(st.get('frac_max_length'), st.get('final_precision')), UI.BRIGHT_GREEN_ON_BLACK))
-                    self.mainMem.writeLock = False
-                    self.mainMem.add('ans', val)
-                    
-            except CalculatorError as e:
-                if len(e.args) > 1: self.ui.addText("display", (' ' * (len(self.ui.prompt) + (span := e.args[1])[0] - 1) + '↗' + '‾' * (span[1] - span[0]), UI.BRIGHT_RED_ON_BLACK))
-                self.ui.addText("display", (f"{repr(e).split('(')[0]}: {e.args[0]}", UI.BRIGHT_RED_ON_BLACK))
-
-            except ZeroDivisionError as e:
-                ui.addText("display", (repr(e), UI.BRIGHT_RED_ON_BLACK))
-            except RecursionError:
-                self.ui.addText("display", ("RecursionError: Check for infinite recursion in functions.", UI.BRIGHT_RED_ON_BLACK))
-            except (EOFError, KeyboardInterrupt):
+            elif m := re.match(r'^\s*(?:quit|exit)\s*$', inp):
                 break
 
+            elif m := re.match(r'^\s*frac(?:\s+(\d+))?$', inp):
+                self.module_frac()
+
+            elif m := re.match(r'^\s*prec(?:ision)?(?:\s+(\d+))?$', inp):
+                self.module_prec()
+
+            elif m := re.match(r'^\s*disp(?:lay)?(?:\s+(\d+))?$', inp):
+                self.module_display()
+
+            elif m := re.match(r'^\s*debug(?:\s+(\w+))?$', inp):
+                self.module_debug()
+
+            elif m := re.match(r'^\s*(?:kb|keyboard)(?:\s+(\w+))?$', inp):
+                self.module_keyboard()
+
+            elif m := re.match(r'^\s*(?:quick_exp(?:onents)?)(?:\s+(\w+))?$', inp):
+                self.module_quick_exp()
+
+            elif inp.strip() == '':
+                continue
+
+            elif m := re.match(r'^\s*(?:=|sto(?:re)? |->)\s*([A-Za-z]\w*)\s*$', inp):
+                self.module_sto()
+
+            else:
+                expr = parse(inp)
+                if expr is None: continue
+                self.mainMem.writeLock = True
+                val = expr.value(self.mainMem)
+                if isinstance(val, Number): val = val.fastContinuedFraction(epsilon=st.finalEpsilon)
+                self.ui.addText("display", (val.disp(st.get('frac_max_length'), st.get('final_precision')), UI.BRIGHT_GREEN_ON_BLACK))
+                self.mainMem.writeLock = False
+                self.mainMem.add('ans', val)
+                    
             self.ui.redraw("display")
             self.ui.saveHistory()
 
