@@ -2,7 +2,7 @@ from calc_expressions import Expression
 from calc_number import RealNumber
 from calc_operators import Operator, Infix, Prefix, Postfix
 from calc_vars import WordToken, Value
-import calc_op
+import calc_op as op
 from calc_errors import ParseError
 from calc_memory import Memory
 import re
@@ -167,7 +167,7 @@ def validate(tokens, pos_list, brackets=''):
     return lst[1:-1], pos_lst[1:-1]
 
 if __name__ == '__main__':
-    from memory import Memory
+    from calc_memory import Memory
     mem = Memory()
     exp1 = parse('25 - cos +3pi + (5 sqrt(4)) - 4abc + sqr', debug=True, mem=mem)
     print(str(exp1))

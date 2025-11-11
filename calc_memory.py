@@ -1,6 +1,6 @@
-import calc_number
+from calc_number import e, pi, imag_i, Number
 from calc_functions import Function, FuncComposition
-import calc_op
+import calc_op as op
 from calc_settings import Settings
 
 st = Settings()
@@ -139,9 +139,9 @@ class GlobalMemory(Memory):
                     f.write(f"{var} = {value.fromString if hasattr(value, 'fromString') else str(value)}\n")
 
     def load(self):
-        import parser
+        import calc_parser
         with open(self.filepath) as f:
             for line in f:
-                parser.parse(line).value(mem=self)
+                calc_parser.parse(line).value(mem=self)
         self.writeLock = False
         self.save()

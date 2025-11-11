@@ -1,13 +1,14 @@
-from settings import Settings
-import vars as module_vars
-from memory import GlobalMemory
-import errors as module_errors
-from parser import parse
-from number import *
+from calc_settings import Settings
+import calc_vars as module_vars
+from calc_memory import GlobalMemory
+import calc_errors as module_errors
+from calc_parser import parse
+from calc_number import Number
+from calc_trie import Trie
 from pathlib import Path
-import help as help_module
+import calc_help
 import sys, re
-from UI import *
+from calc_ui import UI
 
 class Calculator:
     def __init__(self):
@@ -58,7 +59,7 @@ class Calculator:
         return wrapper
 
     def module_help(self):
-        help_module.display()
+        calc_help.display()
     
     def module_vars(self):
         if len(self.ui.text["display"]) > 0: 
@@ -88,42 +89,42 @@ class Calculator:
     
     def module_frac(self):
         if self.m.group(1) is not None: 
-            st.set("frac_max_length", int(self.m.group(1)))
-        self.ui.addText("display", ("frac_max_length", UI.LIGHTBLUE_ON_BLACK), (' -> ', ), (f"{st.get('frac_max_length')}", UI.LIGHTBLUE_ON_BLACK))
+            self.st.set("frac_max_length", int(self.m.group(1)))
+        self.ui.addText("display", ("frac_max_length", UI.LIGHTBLUE_ON_BLACK), (' -> ', ), (f"{self.st.get('frac_max_length')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_prec(self):
         if self.m.group(1) is not None: 
-            st.set("working_precision", int(self.m.group(1)))
-        self.ui.addText("display", ("working_precision", UI.LIGHTBLUE_ON_BLACK), (' -> ', ), (f"{st.get('working_precision')}", UI.LIGHTBLUE_ON_BLACK))
+            self.st.set("working_precision", int(self.m.group(1)))
+        self.ui.addText("display", ("working_precision", UI.LIGHTBLUE_ON_BLACK), (' -> ', ), (f"{self.st.get('working_precision')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_display(self):
         if self.m.group(1) is not None: 
-            st.set("final_precision", int(self.m.group(1)))
-        self.ui.addText("display", ("final_precision", UI.LIGHTBLUE_ON_BLACK), (' -> ', ), (f"{st.get('final_precision')}", UI.LIGHTBLUE_ON_BLACK))
+            self.st.set("final_precision", int(self.m.group(1)))
+        self.ui.addText("display", ("final_precision", UI.LIGHTBLUE_ON_BLACK), (' -> ', ), (f"{self.st.get('final_precision')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_debug(self):
         flag = {'on':True, 'off':False}.get(self.m.group(1) if self.m.group(1) is None else self.m.group(1).lower(), None)
         if flag is not None: 
-            st.set("debug", flag)
+            self.st.set("debug", flag)
         else: 
             self.ui.addText("display", ("Usage: ", ), ("debug [on/off]", UI.LIGHTBLUE_ON_BLACK))
-        self.ui.addText("display", ("debug", UI.LIGHTBLUE_ON_BLACK), (" -> ", ), (f"{st.get('debug')}", UI.LIGHTBLUE_ON_BLACK))
+        self.ui.addText("display", ("debug", UI.LIGHTBLUE_ON_BLACK), (" -> ", ), (f"{self.st.get('debug')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_keyboard(self):
         flag = {'on':True, 'off':False}.get(self.m.group(1) if self.m.group(1) is None else self.m.group(1).lower(), None)
         if flag is not None:
-            st.set("keyboard", flag)
+            self.st.set("keyboard", flag)
         else:
             self.ui.addText("display", ("Usage: ", ), ("keyboard [on/off] (allows use of keyboard module)", UI.LIGHTBLUE_ON_BLACK))
-        self.ui.addText("display", ("keyboard", UI.LIGHTBLUE_ON_BLACK), (" -> ", ), (f"{st.get('keyboard')}", UI.LIGHTBLUE_ON_BLACK))
+        self.ui.addText("display", ("keyboard", UI.LIGHTBLUE_ON_BLACK), (" -> ", ), (f"{self.st.get('keyboard')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_quick_exp(self):
         flag = {'on':True, 'off':False}.get(self.m.group(1) if self.m.group(1) is None else self.m.group(1).lower(), None)
         if flag is not None: 
-            st.set("quick_exponents", flag)
+            self.st.set("quick_exponents", flag)
         else: 
             self.ui.addText("display", ("Usage: ", ), ("quick_exp[onents] [on/off]", UI.LIGHTBLUE_ON_BLACK))
-        self.ui.addText("display", ("quick_exponents", UI.LIGHTBLUE_ON_BLACK), (" -> ", ), (f"{st.get('quick_exponents')}", UI.LIGHTBLUE_ON_BLACK))
+        self.ui.addText("display", ("quick_exponents", UI.LIGHTBLUE_ON_BLACK), (" -> ", ), (f"{self.st.get('quick_exponents')}", UI.LIGHTBLUE_ON_BLACK))
     
     def module_display(self):
         if (ans := self.mainMem.get('ans')) is None:
@@ -153,8 +154,8 @@ class Calculator:
                 self.mainMem.writeLock = True
                 val = expr.value(self.mainMem)
                 if isinstance(val, Number): 
-                    val = val.fastContinuedFraction(epsilon=st.finalEpsilon)
-                self.ui.addText("display", (val.disp(st.get('frac_max_length'), st.get('final_precision')), UI.BRIGHT_GREEN_ON_BLACK))
+                    val = val.fastContinuedFraction(epsilon=self.st.finalEpsilon)
+                self.ui.addText("display", (val.disp(self.st.get('frac_max_length'), self.st.get('final_precision')), UI.BRIGHT_GREEN_ON_BLACK))
                 self.mainMem.writeLock = False
                 self.mainMem.add('ans', val)
                     

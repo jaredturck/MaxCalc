@@ -133,7 +133,7 @@ class UI:
             self.doupdate()
 
     def setupKeyboard(self):
-        from settings import Settings
+        from calc_settings import Settings
         st = Settings()
         try:
             if not st.get("keyboard"): raise ImportError
@@ -212,7 +212,7 @@ class UI:
 
     def getInput(self, trie: Trie=None):
         if not hasattr(self, 'st'):
-            from settings import Settings
+            from calc_settings import Settings
             self.st = Settings()
         if trie is not None: self.trie = trie
         text = []

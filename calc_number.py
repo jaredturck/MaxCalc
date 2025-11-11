@@ -240,12 +240,12 @@ class ComplexNumber(Number):  # Must be non-real valued, i.e. must have an imagi
     def isInt(self): return False
 
     def __abs__(self):
-        from op import exponentiationFn
+        from calc_op import exponentiationFn
         return exponentiationFn(self.real * self.real + self.im * self.im, half)
 
     def arg(self):
         if self.real == zero: return pi / two if self.im > zero else -pi / two
-        from op import arctanFn
+        from calc_op import arctanFn
         argument = arctanFn(self.im / self.real)
         if self.real < 0: argument += pi if self.im > zero else -pi
         # 2nd quad get -theta but supposed to be pi - theta

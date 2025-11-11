@@ -1,4 +1,4 @@
-import calc_operators
+from calc_operators import Operator, Prefix, Postfix, Infix, Ternary, PrefixFunction
 from calc_functions import Function
 from calc_errors import CalculatorError, EvaluationError
 from calc_vars import LValue
@@ -28,7 +28,7 @@ def combinationFn(n, r, perm=False):  # nCr
     return RealNumber(res)
 
 def exponentiationFn(a, b):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     if isinstance(a, Tuple) or isinstance(b, Tuple):
         raise EvaluationError("Cannot perform exponentiation with tuples/vectors")
     if isinstance(a, Function):
@@ -205,7 +205,7 @@ def signumFn(x):
     return one if x.sign == 1 else -one if x.sign == -1 else zero
 
 def assignmentFn(L, R, mem=None):
-    from tuples import LTuple
+    from calc_tuples import LTuple
     if mem is None: raise MemoryError('No Memory object passed to assignment operator')
     if not isinstance(L, LValue): raise EvaluationError('Can only assign to LValue')
     if isinstance(L, LTuple): return L.assign(R, mem=mem)
@@ -213,7 +213,7 @@ def assignmentFn(L, R, mem=None):
     return R
 
 def indexFn(tup, idx):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     if not isinstance(tup, Tuple): raise EvaluationError("Index operator expects a tuple")
     if not isinstance(idx, RealNumber) or not idx.isInt(): raise EvaluationError("Index must be an integer")
     idx = int(idx)
@@ -221,12 +221,12 @@ def indexFn(tup, idx):
     return tup.tokens[idx]
 
 def tupLengthFn(tup):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     if not isinstance(tup, Tuple): raise EvaluationError("Length operator expects a tuple")
     return RealNumber(len(tup))
 
 def tupConcatFn(tup1, tup2):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     if not isinstance(tup1, Tuple) or not isinstance(tup2, Tuple):
         raise EvaluationError("Concatenation '<+>' expects tuples. End 1-tuples with ':)', e.g. '(3:)'")
     result = tup2.morphCopy()
@@ -235,7 +235,7 @@ def tupConcatFn(tup1, tup2):
 
 def knifeFn(dir):
     def check(L, R):  # ensures that L is the index and R is the tuple.
-        from tuples import Tuple
+        from calc_tuples import Tuple
         if not isinstance(L, RealNumber) or not isinstance(R, Tuple): return False
         if not L.isInt(): raise EvaluationError("Knife operator expects an integer operand")
         L = int(L)
@@ -256,7 +256,7 @@ def knifeFn(dir):
     return knife
 
 def comparator(x, y):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     match x, y:
         case Number(), Number(): return (x - y).fastContinuedFraction(epsilon=st.finalEpsilon)
         case Tuple(), Tuple():
@@ -272,7 +272,7 @@ def lambdaArrowFn(L, R, *args, **kwargs):
     return R
 
 def vectorDotProductFn(L, R):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     if not isinstance(L, Tuple) or not isinstance(R, Tuple):
         raise EvaluationError("Dot product '.' expects tuples/vectors")
     if len(L) != len(R) or len(L) == 0:
@@ -284,7 +284,7 @@ def vectorDotProductFn(L, R):
     return result
 
 def vectorCrossProductFn(L, R):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     if not isinstance(L, Tuple) or not isinstance(R, Tuple):
         raise EvaluationError("Cross product '><' expects tuples/vectors")
     if len(L) != 3 or len(R) != 3:
@@ -294,7 +294,7 @@ def vectorCrossProductFn(L, R):
     return tup
 
 def normalPdfFn(L):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     if isinstance(L, Tuple):
         if len(L) != 3: raise EvaluationError('Expected normpdf(x) or normpdf(x, mu, sigma)')
         L = (L.tokens[0] - L.tokens[1]) / (sigma := L.tokens[2])
@@ -304,7 +304,7 @@ def normalPdfFn(L):
     return exp(-x_sqr / two) / sqrt_2pi / sigma
 
 def normalCdfFn(L):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     if isinstance(L, Tuple):
         if len(L) not in (2, 4): raise EvaluationError('Expected normcdf(a, b) or normcdf(a, b, mu, sigma)')
         elif len(L) == 2:
@@ -330,7 +330,7 @@ def invErf(x):  # returns a such that erf(a) = x
 
 
 def invNormalCdfFn(L):
-    from tuples import Tuple
+    from calc_tuples import Tuple
     if isinstance(L, Tuple):
         if len(L) != 3: raise EvaluationError('Expected invnorm(x) or invnorm(x, mu, sigma)')
         L, mu, sigma = L.tokens

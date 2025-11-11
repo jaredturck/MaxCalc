@@ -1,6 +1,6 @@
 import calc_settings
-import calc_operators
-import calc_op
+from calc_operators import Operator, Prefix, Postfix, Infix, Ternary
+import calc_op as op
 from calc_vars import Value, Var, WordToken, LValue
 from calc_errors import CalculatorError, ParseError
 from calc_functions import Function, LFunc
@@ -21,7 +21,7 @@ class Expression(Value):
 
 
     def value(self, mem, debug=False):
-        from tuples import Tuple, LTuple
+        from calc_tuples import Tuple, LTuple
 
         def evaluate(power=0, index=0, skipEval=False):  # returns (Value, endIndex)
             def tryOperate(L, *args, **kwargs):
@@ -73,7 +73,7 @@ class Expression(Value):
                     case Ternary():
                         if token == op.ternary_else:
                             raise ParseError("Unexpected operator ' : '", self.parsedPos[index])
-                        from number import zero
+                        from calc_number import zero
                         ternaryIndex = index
                         if not skipEval: isTrue = op.eq.function(L, zero) == zero
                         trueVal, index = evaluate(power=token.power[1], index=index+1, skipEval=skipEval or not isTrue)
@@ -119,7 +119,7 @@ class Expression(Value):
                         # - LFunc: save the following Expression without evaluating it.
                         # - WordToken: save the VALUE of the following Expression.
                     case Infix():
-                        from number import zero, one
+                        from calc_number import zero, one
                         oldIndex = index
                         exp, index = evaluate(power=token.power[1], index = index + 1 - (token in [op.implicitMult, op.implicitMultPrefix, op.functionInvocation]), skipEval = skipEval or token == op.logicalAND and op.eq.function(L, zero) == one or token == op.logicalOR and op.eq.function(L, zero) == zero)
                         if isinstance(exp, LValue): raise ParseError(f"Invalid operation on LValue", self.parsedPos[oldIndex])

@@ -1,9 +1,9 @@
 from calc_expressions import Expression, Closure
 from calc_tuples import Tuple, LTuple, ONE_TUPLE_INDICATOR
-from calc_number import RealNumber
+from calc_number import RealNumber, st
 from calc_operators import Infix, Prefix, Postfix, PrefixFunction
 from calc_vars import LValue, WordToken, Value
-import calc_op
+import calc_op as op
 from calc_errors import ParseError
 import re
 
@@ -125,7 +125,7 @@ def validate(expr):
             case [_any_, Expression(), op.assignment | op.lambdaArrow] if not isinstance(lst[i], LTuple):
                 lst[i] = LTuple(lst[i])
                 if lst[i + 1] == op.assignment and isinstance(lst[i - 1], WordToken):  # combine lst[i - 1] and lst[i] into an LFunc
-                    from functions import LFunc
+                    from calc_functions import LFunc
                     lst[i - 1: i + 1] = [LFunc(lst[i - 1], lst[i])]
                     posList[i - 1: i + 1] = [(posList[i - 1][0], posList[i][1])]
                     i -= 1
@@ -135,7 +135,7 @@ def validate(expr):
 
 # test code
 if __name__ == '__main__':
-    from memory import Memory
+    from calc_memory import Memory
     mem = Memory()
 
     def testFunc():

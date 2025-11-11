@@ -2,7 +2,7 @@ from calc_settings import Settings
 from calc_errors import ParseError, EvaluationError
 from calc_expressions import Expression
 from calc_vars import LValue, WordToken
-import calc_op
+import calc_op as op
 
 st = Settings()
 ONE_TUPLE_INDICATOR = ':'  # to be placed before the end bracket, e.g. (3:)

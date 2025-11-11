@@ -11,8 +11,8 @@ class Operator:
 
     @property
     def power(self):  # binding power for determining precedence
-        import op
-        return op.power[self] if self in op.power else None
+        import calc_op
+        return calc_op.power[self] if self in calc_op.power else None
 
 class Prefix(Operator):
     def __init__(self, name='<un_op_l>', function=lambda x: 'undefined un_op_left'):

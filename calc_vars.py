@@ -28,7 +28,7 @@ class Var(Value):
         super().__init__(name=name)
 
     def value(self, *args, mem=None, **kwargs):
-        from errors import EvaluationError
+        from calc_errors import EvaluationError
         if mem is None: 
             raise EvaluationError(f"No memory provided to Var object '{self.name}'")
         val = mem.get(self.name)
@@ -60,10 +60,10 @@ class WordToken:
         return str(self.name)
 
     def splitWordToken(self, mem, nextToken):
-        from operators import Prefix, Infix
-        from number import Number, RealNumber
-        from functions import Function
-        from errors import ParseError
+        from calc_operators import Prefix, Infix
+        from calc_number import Number, RealNumber
+        from calc_functions import Function
+        from calc_errors import ParseError
         # returns a list of possible splits of the string.
         # 'greediest' (longer tokens are prioritized) splits come first.
         def trySplit(s, numAllowed=False, onlyFuncsAllowed=False):
@@ -90,7 +90,7 @@ class WordToken:
         if len(splitList) == 0: raise ParseError(f"Unable to parse '{self.name}'")
         # tmp = ['∙'.join(s) for s in splitList]
         if len(splitList) > 1:
-            from UI import UI
+            from calc_ui import UI
             UI().addText("display", ("Warning: ", UI.YELLOW_ON_BLACK), (f"Found {len(splitList)} ways to parse ", ), (self.name, UI.BRIGHT_PURPLE_ON_BLACK), ('.', ))
             tmp = [item for substr in splitList[0] for item in ((substr, UI.BRIGHT_PURPLE_ON_BLACK), ("∙", ))][:-1]
             UI().addText("display", (" (Using ", ), *tmp, (")", ), startNewLine=False)

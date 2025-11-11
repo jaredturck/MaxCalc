@@ -11,7 +11,7 @@ class Settings:
         return cls._instance
 
     def _loadFile(self, filename=None):
-        from number import RealNumber
+        from calc_number import RealNumber
         with open(filename) as f: self._settings = json.loads(f.readline())
         self._filename = filename
         self.epsilon = RealNumber(1, 10 ** self._settings['working_precision'], fcf=False)
@@ -21,13 +21,12 @@ class Settings:
     def set(self, key, value):
         # if key not in self._settings: raise SettingsError(f"key '{key}' not found in settings")
         self._settings[key] = value
-        from number import RealNumber
         if key == 'working_precision':
-            self.epsilon = RealNumber(1, 10 ** value, fcf=False)
+            self.epsilon = calc_number.RealNumber(1, 10 ** value, fcf=False)
         elif key == 'final_precision':
-            self.finalEpsilon = RealNumber(1, 10 * 10 ** value, fcf=False)
+            self.finalEpsilon = calc_number.RealNumber(1, 10 * 10 ** value, fcf=False)
         elif key == 'keyboard':
-            from UI import UI
+            from calc_ui import UI
             UI().setupKeyboard()
         with open(self._filename, "w") as f:
             f.write(json.dumps(self._settings))
