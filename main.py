@@ -1,7 +1,7 @@
 from settings import Settings
-from vars import *
+import vars as module_vars
 from memory import GlobalMemory
-from errors import *
+import errors as module_errors
 from parser import parse
 from number import *
 from pathlib import Path
@@ -41,7 +41,7 @@ class Calculator:
             try:
                 return function(*args, **kwargs)
 
-            except CalculatorError as e:
+            except module_errors.CalculatorError as e:
                 if len(e.args) > 1: 
                     self.ui.addText("display", (' ' * (len(self.ui.prompt) + (span := e.args[1])[0] - 1) + '↗' + '‾' * (span[1] - span[0]), UI.BRIGHT_RED_ON_BLACK))
                 self.ui.addText("display", (f"{repr(e).split('(')[0]}: {e.args[0]}", UI.BRIGHT_RED_ON_BLACK))
