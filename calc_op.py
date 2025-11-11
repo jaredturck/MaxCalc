@@ -356,7 +356,8 @@ def lambda_arrow_fn(L, R, *args, **kwargs):
     # The function will already be created in R
     return R
 
-def vectorDotProductFn(L, R):
+def vector_dot_product_fn(L, R):
+    ''' vector dot product operator L . R '''
     from calc_tuples import Tuple
     if not isinstance(L, Tuple) or not isinstance(R, Tuple):
         raise EvaluationError("Dot product '.' expects tuples/vectors")
@@ -364,11 +365,13 @@ def vectorDotProductFn(L, R):
         raise EvaluationError("'.' expects non-empty tuples/vectors of the same length")
     result = None
     for x, y in zip(L.tokens, R.tokens):
-        if result is None: result = x * y.conj()
+        if result is None:
+            result = x * y.conj()
         else: result += x * y.conj()
     return result
 
-def vectorCrossProductFn(L, R):
+def vector_cross_product_fn(L, R):
+    ''' vector cross product operator L >< R '''
     from calc_tuples import Tuple
     if not isinstance(L, Tuple) or not isinstance(R, Tuple):
         raise EvaluationError("Cross product '><' expects tuples/vectors")
@@ -378,21 +381,25 @@ def vectorCrossProductFn(L, R):
     tup.tokens = [L.tokens[1] * R.tokens[2] - R.tokens[1] * L.tokens[2], L.tokens[2] * R.tokens[0] - R.tokens[2] * L.tokens[0], L.tokens[0] * R.tokens[1] - R.tokens[0] * L.tokens[1]]
     return tup
 
-def normalPdfFn(L):
+def normal_pdf_fn(L):
+    ''' normal probability density function normpdf(x, mu=0, sigma=1) '''
     from calc_tuples import Tuple
     if isinstance(L, Tuple):
-        if len(L) != 3: raise EvaluationError('Expected normpdf(x) or normpdf(x, mu, sigma)')
+        if len(L) != 3:
+            raise EvaluationError('Expected normpdf(x) or normpdf(x, mu, sigma)')
         L = (L.tokens[0] - L.tokens[1]) / (sigma := L.tokens[2])
     else:
         sigma = one
     x_sqr = L * L
     return exp(-x_sqr / two) / sqrt_2pi / sigma
 
-def normalCdfFn(L):
+def normal_cdf_fn(L):
+    ''' normal cumulative distribution function normcdf(a, b, mu=0, sigma=1) '''
     from calc_tuples import Tuple
     if isinstance(L, Tuple):
-        if len(L) not in (2, 4): raise EvaluationError('Expected normcdf(a, b) or normcdf(a, b, mu, sigma)')
-        elif len(L) == 2:
+        if len(L) not in (2, 4):
+            raise EvaluationError('Expected normcdf(a, b) or normcdf(a, b, mu, sigma)')
+        if len(L) == 2:
             a, b, mu, sigma = *L.tokens, zero, one
         else:  # len(L) == 4:
             a, b, mu, sigma = L.tokens
@@ -402,8 +409,8 @@ def normalCdfFn(L):
     x1, x2 = (a - mu) / sigma, (b - mu) / sigma
     return RealNumber((erf(x2 / sqrt2) - erf(x1 / sqrt2)) / 2)
 
-
-def invErf(x):  # returns a such that erf(a) = x
+def inv_erf(x):  # returns a such that erf(a) = x
+    ''' inverse error function '''
     from math import erf
     L, R = -4, 4
     for _ in range(60):
@@ -414,15 +421,16 @@ def invErf(x):  # returns a such that erf(a) = x
     return (L + R) / 2
 
 
-def invNormalCdfFn(L):
+def inv_normal_cdf_fn(L):
+    ''' inverse normal cumulative distribution function invnorm(x, mu=0, sigma=1) '''
     from calc_tuples import Tuple
     if isinstance(L, Tuple):
-        if len(L) != 3: raise EvaluationError('Expected invnorm(x) or invnorm(x, mu, sigma)')
+        if len(L) != 3:
+            raise EvaluationError('Expected invnorm(x) or invnorm(x, mu, sigma)')
         L, mu, sigma = L.tokens
     else:
         mu, sigma = zero, one
-    return mu + sigma * sqrt2 * RealNumber(invErf(two * L - one))
-
+    return mu + sigma * sqrt2 * RealNumber(inv_erf(two * L - one))
 
 assignment = Infix(' = ', assignment_fn)
 lambdaArrow = Infix(' => ', lambda_arrow_fn)
@@ -504,12 +512,11 @@ realPart = PrefixFunction('Re', real_part_fn)
 imPart = PrefixFunction('Im', im_part_fn)
 exponentiation = Infix('^', exponentiation_fn)
 factorial = Postfix('!', factorial_fn)
-vectorDotProduct = Infix('.', vectorDotProductFn)
-vectorCrossProduct = Infix('><', vectorCrossProductFn)
-normpdf = PrefixFunction('normpdf', normalPdfFn)
-normcdf = PrefixFunction('normcdf', normalCdfFn)
-invnorm = PrefixFunction('normcdf', invNormalCdfFn)
-
+vectorDotProduct = Infix('.', vector_dot_product_fn)
+vectorCrossProduct = Infix('><', vector_cross_product_fn)
+normpdf = PrefixFunction('normpdf', normal_pdf_fn)
+normcdf = PrefixFunction('normcdf', normal_cdf_fn)
+invnorm = PrefixFunction('normcdf', inv_normal_cdf_fn)
 
 regex = {
     r'\s*(<\/)\s*': leftKnife,
