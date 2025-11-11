@@ -1,5 +1,5 @@
-from vars import Value, LValue
-from errors import ParseError, EvaluationError
+from calc_vars import Value, LValue
+from calc_errors import ParseError, EvaluationError
 
 # Functions must be followed by bracketed expressions, unlike Unary_Left_Operators.
 # Trig fns and sqrt are therefore treated as Unary_Left_Operators.

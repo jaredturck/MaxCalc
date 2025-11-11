@@ -1,13 +1,12 @@
-from settings import Settings
-from operators import *
-import op
-from vars import Value, Var, WordToken, LValue
-from errors import CalculatorError, ParseError
-from functions import Function, LFunc
+import calc_settings
+import calc_operators
+import calc_op
+from calc_vars import Value, Var, WordToken, LValue
+from calc_errors import CalculatorError, ParseError
+from calc_functions import Function, LFunc
 
-st = Settings()
+st = calc_settings.Settings()
 dummy = Var('dummy')
-
 
 class Expression(Value):
 

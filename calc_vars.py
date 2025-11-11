@@ -29,11 +29,12 @@ class Var(Value):
 
     def value(self, *args, mem=None, **kwargs):
         from errors import EvaluationError
-        if mem is None: raise EvaluationError(f"No memory provided to Var object '{self.name}'")
+        if mem is None: 
+            raise EvaluationError(f"No memory provided to Var object '{self.name}'")
         val = mem.get(self.name)
-        if val is None: raise EvaluationError(f"Variable '{self.name}' not found in memory!")
+        if val is None: 
+            raise EvaluationError(f"Variable '{self.name}' not found in memory!")
         return val
-
 
 class LValue(Value):  # variable ready for assignment. Has NO value
     def __init__(self, name='<lValue>', value=None):

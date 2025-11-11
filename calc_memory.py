@@ -1,10 +1,9 @@
-from number import *
-from functions import Function, FuncComposition
-import op
-from settings import Settings
+import calc_number
+from calc_functions import Function, FuncComposition
+import calc_op
+from calc_settings import Settings
 
 st = Settings()
-
 
 class Memory:
 

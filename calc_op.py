@@ -1,9 +1,9 @@
-from operators import *
-from functions import Function
-from errors import *
-from vars import LValue
-from number import *
-from settings import Settings
+import calc_operators
+from calc_functions import Function
+from calc_errors import CalculatorError, EvaluationError
+from calc_vars import LValue
+from calc_number import RealNumber, ComplexNumber, Number, zero, one, two, three, four, half, ten, ln2, ln10, ln1_1, sqrt2, sqrt_2pi, pi, imag_i
+from calc_settings import Settings
 
 st = Settings()
 

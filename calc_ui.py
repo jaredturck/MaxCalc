@@ -2,11 +2,11 @@ import curses
 import os
 import platform
 import subprocess
-from trie import Trie
-from functions import Function
-from operators import Operator
-from collections import deque
 import json
+from calc_trie import Trie
+from calc_functions import Function
+from calc_operators import Operator
+from collections import deque
 
 system = platform.system()
 calcSplash = "MaxCalc v3.6.0-beta by max_min_median"

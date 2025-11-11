@@ -1,8 +1,8 @@
-from settings import Settings
-from errors import *
-from vars import Value
+from calc_settings import Settings
+from calc_errors import NumberError, CalculatorError
+from calc_vars import Value
 from re import match
-from math import gcd  # too bad Python is too slow, have to rely on C. This is the only math import!
+from math import gcd
 
 st = Settings()
 

@@ -1,12 +1,11 @@
-from expressions import Expression, Closure
-from tuples import *
-from number import RealNumber
-from operators import *
-from vars import LValue, WordToken, Value
-import op
-from errors import ParseError
+from calc_expressions import Expression, Closure
+from calc_tuples import Tuple, LTuple, ONE_TUPLE_INDICATOR
+from calc_number import RealNumber
+from calc_operators import Infix, Prefix, Postfix, PrefixFunction
+from calc_vars import LValue, WordToken, Value
+import calc_op
+from calc_errors import ParseError
 import re
-
 
 # Performs surface-level parsing and validation. Does not attempt to split WordTokens or evaluate expressions.
 

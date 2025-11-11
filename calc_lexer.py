@@ -1,30 +1,35 @@
-from expressions import Expression
-from number import RealNumber
-from operators import Operator, Infix, Prefix, Postfix
-from vars import WordToken, Value
-import op
-from errors import ParseError
+from calc_expressions import Expression
+from calc_number import RealNumber
+from calc_operators import Operator, Infix, Prefix, Postfix
+from calc_vars import WordToken, Value
+import calc_op
+from calc_errors import ParseError
+from calc_memory import Memory
 import re
 
 # Performs surface-level parsing and validation. Does not attempt to split WordTokens or evaluate expressions.
 
-
 class Lexer:
 
     def __init__(self, expr_string='', mem=None):
-        if mem is None: from memory import Memory; mem = Memory(test=True) # raise TypeError('No memory provided to lexer!')
+        if mem is None: 
+            mem = Memory(test=True)
         self._tokens = []
         self._posList = []
         self._pos = 0
         self.current_string = self.expr_string = expr_string
     
     def next(self):
-        if len(self._tokens) > 0: return self._tokens.pop(0), self._posList.pop(0)
-        else: return self.prep_next_token().next()
+        if len(self._tokens) > 0:
+            return self._tokens.pop(0), self._posList.pop(0)
+        else:
+            return self.prep_next_token().next()
 
     def peek(self):
-        if len(self._tokens) > 0: return self._tokens[0], self._posList[0]
-        else: return self.prep_next_token().peek()
+        if len(self._tokens) > 0:
+            return self._tokens[0], self._posList[0]
+        else:
+            return self.prep_next_token().peek()
 
     def prep_next_token(self):
 
@@ -43,10 +48,13 @@ class Lexer:
                 
         if m := re.match(r'([(){}[\]])', self.current_string):
             return add_token(self.current_string[0], m)
+
         if m := re.match(r'(\d+(?:\.\d*)?|\.\d+)', self.current_string):  # Number. Cannot follow Number, space_separator, or Var
             return add_token(RealNumber(m.group()), m)
+            
         for regex in Op.regex:
-            if m := re.match(regex, self.current_string): return add_token(Op.regex[regex], m)
+            if m := re.match(regex, self.current_string): 
+                return add_token(Op.regex[regex], m)
         if m := re.match(r'([A-Za-z](?:\w*(?:\d(?!(?:[0-9.]))|[A-Za-z_](?![A-Za-z])))?)', self.current_string):  # Word token (might be a concatenation of vars & possible func at the end)
             return add_token(WordToken(m.group()), m)
         raise ParseError(f"Error parsing string: '{self.current_string}'")
@@ -62,10 +70,12 @@ def parse(s, start_pos=0, brackets='', mem=None, debug=False):
             pos += m.span()[1]
             s = s[m.span()[1]:]
 
-    if mem is None: raise ParseError('No memory provided to parser!')
+    if mem is None: 
+        raise ParseError('No memory provided to parser!')
     
     # check for commands
-    if m := re.match(r'\s*help\s*', s): print("Help is on the way!"); return None
+    if m := re.match(r'\s*help\s*', s): 
+        print("Help is on the way!"); return None
     if m := re.match(r'\s*vars\s*', s):
         print("\nUser-defined Variables")
         print("======================")

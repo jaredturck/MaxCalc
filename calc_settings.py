@@ -1,6 +1,5 @@
-from errors import SettingsError
+from calc_errors import SettingsError
 import json
-
 
 class Settings:
 
